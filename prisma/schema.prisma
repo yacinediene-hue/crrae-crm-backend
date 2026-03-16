@@ -8,25 +8,24 @@ datasource db {
 }
 
 model Contact {
-  id          String    @id @default(cuid())
+  id          String     @id @default(cuid())
   name        String
-  email       String    @unique
+  email       String     @unique
   phone       String?
   company     String?
-  status      String    @default("lead")
-  value       Float     @default(0)
+  status      String     @default("lead")
+  value       Float      @default(0)
   lastContact DateTime?
   tags        String[]
   notes       String?
-  createdAt   DateTime  @default(now())
+  createdAt   DateTime   @default(now())
   assignedTo  String?
-
-  deals      Deal[]
-  activities Activity[]
-  tickets    Ticket[]
-  surveys    Survey[]
-  events     Event[]
-  contracts  Contract[]
+  activities  Activity[]
+  contracts   Contract[]
+  deals       Deal[]
+  events      Event[]
+  surveys     Survey[]
+  tickets     Ticket[]
 }
 
 model Deal {
@@ -39,8 +38,7 @@ model Deal {
   dueDate     DateTime?
   notes       String?
   createdAt   DateTime  @default(now())
-
-  contact Contact @relation(fields: [contactId], references: [id])
+  contact     Contact   @relation(fields: [contactId], references: [id])
 }
 
 model Activity {
@@ -50,8 +48,7 @@ model Activity {
   date      DateTime
   note      String?
   createdAt DateTime @default(now())
-
-  contact Contact @relation(fields: [contactId], references: [id])
+  contact   Contact  @relation(fields: [contactId], references: [id])
 }
 
 model Ticket {
@@ -64,9 +61,8 @@ model Ticket {
   createdAt  DateTime  @default(now())
   closedAt   DateTime?
   assignedTo String?
-
-  contact Contact  @relation(fields: [contactId], references: [id])
-  surveys Survey[]
+  surveys    Survey[]
+  contact    Contact   @relation(fields: [contactId], references: [id])
 }
 
 model Survey {
@@ -78,9 +74,8 @@ model Survey {
   comment     String?
   sentAt      DateTime  @default(now())
   respondedAt DateTime?
-
-  ticket  Ticket  @relation(fields: [ticketId], references: [id])
-  contact Contact @relation(fields: [contactId], references: [id])
+  contact     Contact   @relation(fields: [contactId], references: [id])
+  ticket      Ticket    @relation(fields: [ticketId], references: [id])
 }
 
 model Campaign {
@@ -107,8 +102,7 @@ model Event {
   note      String?
   done      Boolean  @default(false)
   createdAt DateTime @default(now())
-
-  contact Contact @relation(fields: [contactId], references: [id])
+  contact   Contact  @relation(fields: [contactId], references: [id])
 }
 
 model Contract {
@@ -120,8 +114,7 @@ model Contract {
   endDate   DateTime?
   value     Float     @default(0)
   createdAt DateTime  @default(now())
-
-  contact Contact @relation(fields: [contactId], references: [id])
+  contact   Contact   @relation(fields: [contactId], references: [id])
 }
 
 model Workflow {
