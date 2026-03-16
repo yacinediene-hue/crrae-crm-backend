@@ -8,11 +8,11 @@ export declare class AuthController {
     }): Promise<{
         access_token: string;
         user: {
-            id: string;
-            name: string;
-            email: string;
-            role: string;
-            avatar: string;
+            id: any;
+            name: any;
+            email: any;
+            role: any;
+            avatar: any;
         };
     }>;
 }
