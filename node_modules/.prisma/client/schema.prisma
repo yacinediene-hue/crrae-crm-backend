@@ -137,3 +137,32 @@ model User {
   passwordHash String
   createdAt    DateTime @default(now())
 }
+
+model Demande {
+  id                 String    @id @default(cuid())
+  numDemande         String?   @unique
+  nomPrenom          String
+  matricule          String?
+  adherent           String?
+  typeClient         String    @default("Actif")
+  pays               String?
+  heureAppel         String?
+  canal              String?
+  telephone          String?
+  email              String?
+  objetDemande       String?
+  commentaire        String?
+  agentN1            String?
+  service            String?
+  agentN2            String?
+  dateReception      DateTime?
+  dateTraitement     DateTime?
+  statut             String    @default("En cours")
+  actionMenee        String?
+  delaiTraitement    Int?
+  respectDelai       String?
+  canalCommunication String?
+  noteSatisfaction   Int?
+  createdAt          DateTime  @default(now())
+  updatedAt          DateTime  @updatedAt
+}
