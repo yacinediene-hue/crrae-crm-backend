@@ -12,7 +12,6 @@ import { ContractsModule } from './contracts/contracts.module';
 import { WorkflowsModule } from './workflows/workflows.module';
 import { UsersModule } from './users/users.module';
 import { DemandesModule } from './demandes/demandes.module';
-import { WhatsappModule } from './whatsapp/whatsapp.module';
 
 @Module({
   imports: [
@@ -29,7 +28,6 @@ import { WhatsappModule } from './whatsapp/whatsapp.module';
     WorkflowsModule,
     UsersModule,
     DemandesModule,
-    WhatsappModule,
   ],
 })
 export class AppModule {}
