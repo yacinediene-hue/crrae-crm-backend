@@ -2,4 +2,4 @@
 cmds = ["npm install", "npx prisma generate", "npx nest build"]
 
 [start]
-cmd = "npx prisma migrate deploy && node dist/src/main.js"
+cmd = "node dist/src/main.js"
