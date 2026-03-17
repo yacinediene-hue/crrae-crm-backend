@@ -165,4 +165,14 @@ model Demande {
   noteSatisfaction   Int?
   createdAt          DateTime  @default(now())
   updatedAt          DateTime  @updatedAt
+  commentaires       Commentaire[]
+}
+
+model Commentaire {
+  id        String   @id @default(cuid())
+  demandeId String
+  auteur    String
+  contenu   String
+  createdAt DateTime @default(now())
+  demande   Demande  @relation(fields: [demandeId], references: [id], onDelete: Cascade)
 }

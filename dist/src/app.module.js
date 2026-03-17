@@ -21,6 +21,7 @@ const contracts_module_1 = require("./contracts/contracts.module");
 const workflows_module_1 = require("./workflows/workflows.module");
 const users_module_1 = require("./users/users.module");
 const demandes_module_1 = require("./demandes/demandes.module");
+const commentaires_module_1 = require("./commentaires/commentaires.module");
 let AppModule = class AppModule {
 };
 exports.AppModule = AppModule;
@@ -40,6 +41,7 @@ exports.AppModule = AppModule = __decorate([
             workflows_module_1.WorkflowsModule,
             users_module_1.UsersModule,
             demandes_module_1.DemandesModule,
+            commentaires_module_1.CommentairesModule,
         ],
     })
 ], AppModule);

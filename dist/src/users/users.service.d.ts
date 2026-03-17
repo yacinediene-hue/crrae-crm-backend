@@ -2,9 +2,50 @@ import { PrismaService } from '../prisma/prisma.service';
 export declare class UsersService {
     private prisma;
     constructor(prisma: PrismaService);
-    findAll(query?: any): any;
-    findOne(id: string): Promise<any>;
-    create(data: any): Promise<any>;
-    update(id: string, data: any): Promise<any>;
-    remove(id: string): Promise<any>;
+    findAll(query?: any): import(".prisma/client").Prisma.PrismaPromise<{
+        id: string;
+        email: string;
+        name: string;
+        role: string;
+        avatar: string;
+        active: boolean;
+        createdAt: Date;
+    }[]>;
+    findOne(id: string): Promise<{
+        id: string;
+        email: string;
+        name: string;
+        role: string;
+        avatar: string;
+        active: boolean;
+        createdAt: Date;
+    }>;
+    create(data: any): Promise<{
+        id: string;
+        email: string;
+        name: string;
+        role: string;
+        avatar: string;
+        active: boolean;
+        createdAt: Date;
+    }>;
+    update(id: string, data: any): Promise<{
+        id: string;
+        email: string;
+        name: string;
+        role: string;
+        avatar: string;
+        active: boolean;
+        createdAt: Date;
+    }>;
+    remove(id: string): Promise<{
+        id: string;
+        email: string;
+        name: string;
+        role: string;
+        avatar: string | null;
+        active: boolean;
+        passwordHash: string;
+        createdAt: Date;
+    }>;
 }
