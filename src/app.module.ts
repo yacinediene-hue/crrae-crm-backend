@@ -13,6 +13,9 @@ import { WorkflowsModule } from './workflows/workflows.module';
 import { UsersModule } from './users/users.module';
 import { DemandesModule } from './demandes/demandes.module';
 import { CommentairesModule } from './commentaires/commentaires.module';
+import { EnquetesModule } from './enquetes/enquetes.module';
+import { TimelineModule } from './timeline/timeline.module';
+import { TimelineModule } from './timeline/timeline.module';
 
 @Module({
   imports: [
@@ -30,6 +33,9 @@ import { CommentairesModule } from './commentaires/commentaires.module';
     UsersModule,
     DemandesModule,
     CommentairesModule,
+    EnquetesModule,
+    TimelineModule,
+    TimelineModule,
   ],
 })
 export class AppModule {}

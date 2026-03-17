@@ -166,6 +166,7 @@ model Demande {
   createdAt          DateTime  @default(now())
   updatedAt          DateTime  @updatedAt
   commentaires       Commentaire[]
+  timeline           Timeline[]
 }
 
 model Commentaire {
@@ -173,6 +174,16 @@ model Commentaire {
   demandeId String
   auteur    String
   contenu   String
+  createdAt DateTime @default(now())
+  demande   Demande  @relation(fields: [demandeId], references: [id], onDelete: Cascade)
+}
+
+model Timeline {
+  id        String   @id @default(cuid())
+  demandeId String
+  auteur    String
+  action    String
+  detail    String?
   createdAt DateTime @default(now())
   demande   Demande  @relation(fields: [demandeId], references: [id], onDelete: Cascade)
 }
