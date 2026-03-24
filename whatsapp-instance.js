@@ -15,6 +15,7 @@ if (!clientId || !label || !qrFile) {
 }
 
 const API_URL = 'https://crrae-crm-backend-production.up.railway.app';
+const ENQUETE_URL = 'https://thriving-cassata-92f38e.netlify.app';
 let token = null;
 
 // Déduplication : évite de traiter deux fois le même message
@@ -79,6 +80,11 @@ client.on('qr', qr => {
 client.on('ready', async () => {
   console.log(`✅ [${label}] Connecté !`);
   if (!token) await login();
+  // Poll enquêtes toutes les 2 minutes (seulement sur instance N°1 pour éviter doublons)
+  if (clientId === 'whatsapp-1') {
+    setInterval(pollEnquetes, 2 * 60 * 1000);
+    console.log(`[${label}] Polling enquêtes actif (toutes les 2 min)`);
+  }
 });
 
 client.on('disconnected', reason => {
@@ -113,6 +119,35 @@ client.on('message', async msg => {
   }
 });
 
+async function envoyerEnqueteWhatsApp(telephone, numDemande, demandeId) {
+  try {
+    const lien = `${ENQUETE_URL}?ref=${numDemande}`;
+    await client.sendMessage(`${telephone}@c.us`,
+      `Bonjour,\n\nVotre demande *${numDemande}* a été traitée par nos services.\n\nNous vous invitons à évaluer la qualité de notre traitement en quelques clics :\n👉 ${lien}\n\nVotre retour est précieux.\n\nCordialement,\nService Client CRRAE-UMOA`
+    );
+    await axios.put(`${API_URL}/demandes/${demandeId}`, { enqueteEnvoyee: true }, { headers: { Authorization: `Bearer ${token}` } });
+    console.log(`📊 [${label}] Enquête envoyée: ${numDemande} → ${telephone}`);
+  } catch (e) {
+    console.error(`[${label}] Erreur enquête:`, e.message);
+  }
+}
+
+async function pollEnquetes() {
+  if (!token) return;
+  try {
+    const [resWA, resAppel] = await Promise.all([
+      axios.get(`${API_URL}/demandes?statut=Traité&canal=WhatsApp`, { headers: { Authorization: `Bearer ${token}` } }),
+      axios.get(`${API_URL}/demandes?statut=Traité&canal=Appel`, { headers: { Authorization: `Bearer ${token}` } }),
+    ]);
+    const aEnvoyer = [...resWA.data, ...resAppel.data].filter(d => !d.enqueteEnvoyee && d.telephone);
+    for (const d of aEnvoyer) {
+      await envoyerEnqueteWhatsApp(d.telephone, d.numDemande, d.id);
+    }
+  } catch (e) {
+    if (e.response?.status !== 401) console.error(`[${label}] Erreur poll enquêtes:`, e.message);
+  }
+}
+
 client.on('call', async call => {
   if (dejaTraite(call.id)) return;
   try {
@@ -133,6 +168,13 @@ client.on('call', async call => {
     await client.sendMessage(call.from,
       `Bonjour,\n\nNous avons bien reçu votre appel et enregistré votre demande sous le numéro *${res.data.numDemande}*.\n\nUn agent vous rappellera dans les meilleurs délais.\n\nCordialement,\nService Client CRRAE-UMOA`
     );
+    // Enquête envoyée 5 minutes après la fin estimée de l'appel
+    setTimeout(async () => {
+      const d = res.data;
+      if (d.telephone && !d.enqueteEnvoyee) {
+        await envoyerEnqueteWhatsApp(d.telephone, d.numDemande, d.id);
+      }
+    }, 5 * 60 * 1000);
   } catch (e) {
     console.error(`[${label}] Erreur appel:`, e.message);
   }
