@@ -132,6 +132,9 @@ async function envoyerEnqueteWhatsApp(telephone, numDemande, demandeId) {
   }
 }
 
+// Seuil : enquêtes uniquement pour les demandes créées après le déploiement de la fonctionnalité
+const ENQUETE_DEPUIS = new Date('2026-03-24T00:00:00.000Z');
+
 async function pollEnquetes() {
   if (!token) return;
   try {
@@ -139,7 +142,11 @@ async function pollEnquetes() {
       axios.get(`${API_URL}/demandes?statut=Traité&canal=WhatsApp`, { headers: { Authorization: `Bearer ${token}` } }),
       axios.get(`${API_URL}/demandes?statut=Traité&canal=Appel`, { headers: { Authorization: `Bearer ${token}` } }),
     ]);
-    const aEnvoyer = [...resWA.data, ...resAppel.data].filter(d => !d.enqueteEnvoyee && d.telephone);
+    const aEnvoyer = [...resWA.data, ...resAppel.data].filter(d =>
+      !d.enqueteEnvoyee &&
+      d.telephone &&
+      new Date(d.createdAt) >= ENQUETE_DEPUIS
+    );
     for (const d of aEnvoyer) {
       await envoyerEnqueteWhatsApp(d.telephone, d.numDemande, d.id);
     }
