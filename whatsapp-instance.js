@@ -95,7 +95,7 @@ client.on('message', async msg => {
     );
     console.log(`✅ [${label}] Demande: ${res.data.numDemande} - ${nom}`);
     await client.sendMessage(msg.from,
-      `Bonjour ${nom},\n\nNous accusons réception de votre demande enregistrée sous le numéro *${res.data.numDemande}*.\n\nVotre dossier est en cours de traitement.\n\nCordialement,\nService Client CRRAE-UMOA`
+      `Bonjour,\n\nNous accusons réception de votre message et vous confirmons l'enregistrement de votre demande sous le numéro *${res.data.numDemande}*.\n\nVotre dossier est pris en charge et sera traité dans les meilleurs délais.\n\nCordialement,\nService Client CRRAE-UMOA`
     );
   } catch (e) {
     console.error(`[${label}] Erreur message:`, e.message);
