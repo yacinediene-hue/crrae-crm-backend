@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { Injectable, NotFoundException, InternalServerErrorException } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { EmailService } from '../email/email.service';
 
@@ -156,18 +156,24 @@ export class DemandesService {
       ...metrics,
     });
 
-    const updated = await this.prisma.demande.update({
-      where: { id },
-      data: {
-        ...data,
-        dateReception: mergedData.dateReception,
-        dateTraitement: mergedData.dateTraitement,
-        noteSatisfaction: mergedData.noteSatisfaction,
-        delaiTraitement: metrics.delaiTraitement,
-        respectDelai: metrics.respectDelai,
-        priorite,
-      },
-    });
+    let updated: any;
+    try {
+      updated = await this.prisma.demande.update({
+        where: { id },
+        data: {
+          ...data,
+          dateReception: mergedData.dateReception,
+          dateTraitement: mergedData.dateTraitement,
+          noteSatisfaction: mergedData.noteSatisfaction,
+          delaiTraitement: metrics.delaiTraitement,
+          respectDelai: metrics.respectDelai,
+          priorite,
+        },
+      });
+    } catch (e) {
+      console.error('[demandes.update] Prisma error:', e?.message, JSON.stringify(e?.meta));
+      throw new InternalServerErrorException(`Erreur Prisma: ${e?.message}`);
+    }
 
     if (data.statut && data.statut !== existing.statut) {
       await this.prisma.timeline.create({
