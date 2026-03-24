@@ -17,6 +17,16 @@ if (!clientId || !label || !qrFile) {
 const API_URL = 'https://crrae-crm-backend-production.up.railway.app';
 let token = null;
 
+// Déduplication : évite de traiter deux fois le même message
+const messagesTraites = new Set();
+function dejaTraite(msgId) {
+  if (messagesTraites.has(msgId)) return true;
+  messagesTraites.add(msgId);
+  // Nettoyage après 5 minutes
+  setTimeout(() => messagesTraites.delete(msgId), 5 * 60 * 1000);
+  return false;
+}
+
 async function login() {
   const res = await axios.post(`${API_URL}/auth/login`, {
     email: 'admin@crrae-umoa.org',
@@ -78,6 +88,7 @@ client.on('disconnected', reason => {
 
 client.on('message', async msg => {
   if (msg.from === 'status@broadcast') return;
+  if (dejaTraite(msg.id._serialized)) return;
   try {
     const contact = await msg.getContact();
     const nom = contact.pushname || msg.from.replace('@c.us', '');
