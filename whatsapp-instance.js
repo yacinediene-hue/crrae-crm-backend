@@ -116,7 +116,6 @@ client.on('message', async msg => {
 client.on('call', async call => {
   if (dejaTraite(call.id)) return;
   try {
-    await call.reject();
     const telephone = call.from.replace('@c.us', '');
     const res = await axios.post(`${API_URL}/demandes`,
       {
