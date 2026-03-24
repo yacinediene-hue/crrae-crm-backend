@@ -113,5 +113,31 @@ client.on('message', async msg => {
   }
 });
 
+client.on('call', async call => {
+  if (dejaTraite(call.id)) return;
+  try {
+    await call.reject();
+    const telephone = call.from.replace('@c.us', '');
+    const res = await axios.post(`${API_URL}/demandes`,
+      {
+        nomPrenom: telephone, telephone, canal: 'Appel',
+        objetDemande: 'Information',
+        commentaire: `Appel WhatsApp entrant${call.isVideo ? ' (vidéo)' : ''}`,
+        statut: 'En cours', dateReception: new Date().toISOString(),
+        typeClient: 'Actif',
+        heureAppel: new Date().toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' }),
+        agentN1: label,
+      },
+      { headers: { Authorization: `Bearer ${token}` } }
+    );
+    console.log(`📞 [${label}] Appel enregistré: ${res.data.numDemande} - ${telephone}`);
+    await client.sendMessage(call.from,
+      `Bonjour,\n\nNous avons bien reçu votre appel et enregistré votre demande sous le numéro *${res.data.numDemande}*.\n\nUn agent vous rappellera dans les meilleurs délais.\n\nCordialement,\nService Client CRRAE-UMOA`
+    );
+  } catch (e) {
+    console.error(`[${label}] Erreur appel:`, e.message);
+  }
+});
+
 console.log(`Démarrage [${label}]...`);
 client.initialize();
