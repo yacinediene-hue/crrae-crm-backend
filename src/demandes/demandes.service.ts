@@ -10,9 +10,11 @@ export class DemandesService {
   ) {}
 
   private computePriorite(data: any): string {
-    if (data.respectDelai === 'NON') return 'Critique';
-    if (data.objetDemande === 'Réclamation') return 'Élevée';
-    return 'Normale';
+    if (data.respectDelai === 'NON') return 'Urgent';
+    const validValues = ['Faible', 'Moyen', 'Élevé', 'Urgent'];
+    if (data.priorite && validValues.includes(data.priorite)) return data.priorite;
+    if (data.objetDemande === 'Réclamation') return 'Élevé';
+    return 'Moyen';
   }
 
   private computeDelaiAndRespect(data: any) {
@@ -118,11 +120,11 @@ export class DemandesService {
     });
 
     if (demande.email) {
-      await this.emailService.envoyerAccuseReception(
+      this.emailService.envoyerAccuseReception(
         demande.email,
         demande.numDemande,
         demande.nomPrenom,
-      );
+      ).catch(e => console.error('[email] Accusé de réception non envoyé:', e?.message));
     }
 
     return demande;

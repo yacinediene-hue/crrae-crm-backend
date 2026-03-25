@@ -157,7 +157,7 @@ model Demande {
   agentN2            String?
   dateReception      DateTime?
   dateTraitement     DateTime?
-  priorite           String?       @default("Normale")
+  priorite           String?       @default("Moyen")
   statut             String        @default("En cours")
   actionMenee        String?
   delaiTraitement    Int?
