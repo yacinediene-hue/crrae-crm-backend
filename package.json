@@ -16,9 +16,13 @@
     "test": "jest",
     "prisma:generate": "prisma generate",
     "prisma:migrate": "prisma migrate dev",
+    "preprisma:migrate": "node scripts/guard-not-prod.js",
     "prisma:studio": "prisma studio",
+    "preprisma:studio": "node scripts/guard-not-prod.js",
     "seed": "ts-node prisma/seed.ts",
-    "seed:demandes": "node prisma/seed-demandes.js"
+    "preseed": "node scripts/guard-not-prod.js",
+    "seed:demandes": "node prisma/seed-demandes.js",
+    "preseed:demandes": "node scripts/guard-not-prod.js"
   },
   "dependencies": {
     "@nestjs/common": "^10.0.0",
