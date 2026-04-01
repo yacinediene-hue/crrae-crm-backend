@@ -1,6 +1,0 @@
-2026/03/23-12:58:20.518 13d675 Reusing MANIFEST /Users/yacinediene/CRRAE-CRM/crrae-crm-backend/.wwebjs_auth/session/Default/Local Storage/leveldb/MANIFEST-000001
-2026/03/23-12:58:20.522 13d675 Recovering log #4
-2026/03/23-12:58:20.523 13d675 Reusing old log /Users/yacinediene/CRRAE-CRM/crrae-crm-backend/.wwebjs_auth/session/Default/Local Storage/leveldb/000004.log 
-2026/03/23-13:00:21.876 13d678 Level-0 table #8: started
-2026/03/23-13:00:21.880 13d678 Level-0 table #8: 18922 bytes OK
-2026/03/23-13:00:21.883 13d678 Delete type=0 #4
