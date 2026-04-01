@@ -13,4 +13,4 @@ RUN npx prisma generate
 COPY . .
 RUN npm run build
 
-CMD ["sh", "-c", "npx prisma migrate deploy && node dist/src/main.js"]
+CMD ["sh", "-c", "npx prisma migrate resolve --rolled-back 20260401124012_add_password_reset_token 2>/dev/null; npx prisma migrate deploy && node dist/src/main.js"]
