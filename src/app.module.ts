@@ -1,4 +1,6 @@
 import { Module } from '@nestjs/common';
+import { APP_GUARD } from '@nestjs/core';
+import { RolesGuard } from './auth/roles.guard';
 import { PrismaModule } from './prisma/prisma.module';
 import { AuthModule } from './auth/auth.module';
 import { ContactsModule } from './contacts/contacts.module';
@@ -13,9 +15,6 @@ import { WorkflowsModule } from './workflows/workflows.module';
 import { UsersModule } from './users/users.module';
 import { DemandesModule } from './demandes/demandes.module';
 import { CommentairesModule } from './commentaires/commentaires.module';
-import { EnquetesModule } from './enquetes/enquetes.module';
-import { TimelineModule } from './timeline/timeline.module';
-import { TimelineModule } from './timeline/timeline.module';
 
 @Module({
   imports: [
@@ -33,9 +32,6 @@ import { TimelineModule } from './timeline/timeline.module';
     UsersModule,
     DemandesModule,
     CommentairesModule,
-    EnquetesModule,
-    TimelineModule,
-    TimelineModule,
   ],
 })
 export class AppModule {}
