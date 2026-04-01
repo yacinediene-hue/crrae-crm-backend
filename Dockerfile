@@ -13,4 +13,4 @@ RUN npx prisma generate
 COPY . .
 RUN npm run build
 
-CMD ["sh", "-c", "npx prisma migrate deploy; node startup.js && node dist/src/main.js"]
+CMD ["sh", "-c", "node startup.js && npx prisma migrate resolve --applied 20260329232010_refonte_deals_adhesions 2>/dev/null; npx prisma migrate deploy && node dist/src/main.js"]
