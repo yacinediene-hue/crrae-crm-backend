@@ -1,8 +1,10 @@
 import { Controller, Get, Post, Put, Delete, Param, Body, Query, UseGuards } from '@nestjs/common';
 import { DealsService } from './deals.service';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
+import { RolesGuard } from '../auth/roles.guard';
+import { Roles } from '../auth/roles.decorator';
 
-@UseGuards(JwtAuthGuard)
+@UseGuards(JwtAuthGuard, RolesGuard)
 @Controller('deals')
 export class DealsController {
   constructor(private service: DealsService) {}
@@ -20,5 +22,6 @@ export class DealsController {
   update(@Param('id') id: string, @Body() body: any) { return this.service.update(id, body); }
 
   @Delete(':id')
+  @Roles('admin', 'manager')
   remove(@Param('id') id: string) { return this.service.remove(id); }
 }
