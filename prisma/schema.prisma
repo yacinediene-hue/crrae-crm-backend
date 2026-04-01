@@ -113,6 +113,7 @@ model Campaign {
   profilClient String?
   status       String?
   tag          String?
+  dateEnvoi    DateTime?
 
   createdAt    DateTime @default(now())
 }
