@@ -31,15 +31,44 @@ let CampaignsService = class CampaignsService {
         return item;
     }
     create(data) {
-        return this.prisma.campaign.create({ data });
+        const payload = {
+            ...data,
+            dateEnvoi: data.dateEnvoi ? new Date(data.dateEnvoi) : null,
+        };
+        return this.prisma.campaign.create({ data: payload });
     }
     async update(id, data) {
         await this.findOne(id);
-        return this.prisma.campaign.update({ where: { id }, data });
+        const payload = {
+            ...data,
+            dateEnvoi: data.dateEnvoi ? new Date(data.dateEnvoi) : null,
+        };
+        return this.prisma.campaign.update({ where: { id }, data: payload });
     }
     async remove(id) {
         await this.findOne(id);
         return this.prisma.campaign.delete({ where: { id } });
+    }
+    async getTargets(campaignId) {
+        const campaign = await this.prisma.campaign.findUnique({
+            where: { id: campaignId },
+        });
+        if (!campaign)
+            return [];
+        const where = {};
+        if (campaign.profilClient) {
+            where.profilClient = campaign.profilClient;
+        }
+        if (campaign.status) {
+            where.status = campaign.status;
+        }
+        if (campaign.tag) {
+            where.tags = { has: campaign.tag };
+        }
+        return this.prisma.contact.findMany({
+            where,
+            orderBy: { createdAt: 'desc' },
+        });
     }
 };
 exports.CampaignsService = CampaignsService;

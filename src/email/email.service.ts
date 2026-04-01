@@ -36,4 +36,26 @@ CRRAE-UMOA
 
     await this.transporter.sendMail(message);
   }
+
+  async envoyerResetPassword(email: string, nom: string, lien: string) {
+    await this.transporter.sendMail({
+      from: `"Service Client CRRAE-UMOA" <${process.env.EMAIL_USER}>`,
+      to: email,
+      subject: 'Réinitialisation de votre mot de passe',
+      text: `
+Bonjour ${nom},
+
+Vous avez demandé la réinitialisation de votre mot de passe.
+
+Cliquez sur le lien ci-dessous (valable 1 heure) :
+
+${lien}
+
+Si vous n'êtes pas à l'origine de cette demande, ignorez cet email.
+
+Service Client
+CRRAE-UMOA
+      `,
+    });
+  }
 }

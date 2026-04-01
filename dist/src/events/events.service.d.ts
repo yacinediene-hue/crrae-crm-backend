@@ -10,6 +10,7 @@ export declare class EventsService {
             createdAt: Date;
             phone: string | null;
             company: string | null;
+            profilClient: string | null;
             status: string;
             value: number;
             lastContact: Date | null;
@@ -20,11 +21,11 @@ export declare class EventsService {
     } & {
         id: string;
         createdAt: Date;
-        title: string;
         contactId: string;
         type: string;
         date: Date;
         note: string | null;
+        title: string;
         time: string | null;
         done: boolean;
     })[]>;
@@ -36,6 +37,7 @@ export declare class EventsService {
             createdAt: Date;
             phone: string | null;
             company: string | null;
+            profilClient: string | null;
             status: string;
             value: number;
             lastContact: Date | null;
@@ -46,11 +48,11 @@ export declare class EventsService {
     } & {
         id: string;
         createdAt: Date;
-        title: string;
         contactId: string;
         type: string;
         date: Date;
         note: string | null;
+        title: string;
         time: string | null;
         done: boolean;
     }>;
@@ -62,6 +64,7 @@ export declare class EventsService {
             createdAt: Date;
             phone: string | null;
             company: string | null;
+            profilClient: string | null;
             status: string;
             value: number;
             lastContact: Date | null;
@@ -72,11 +75,11 @@ export declare class EventsService {
     } & {
         id: string;
         createdAt: Date;
-        title: string;
         contactId: string;
         type: string;
         date: Date;
         note: string | null;
+        title: string;
         time: string | null;
         done: boolean;
     }, never, import("@prisma/client/runtime/library").DefaultArgs>;
@@ -88,6 +91,7 @@ export declare class EventsService {
             createdAt: Date;
             phone: string | null;
             company: string | null;
+            profilClient: string | null;
             status: string;
             value: number;
             lastContact: Date | null;
@@ -98,22 +102,22 @@ export declare class EventsService {
     } & {
         id: string;
         createdAt: Date;
-        title: string;
         contactId: string;
         type: string;
         date: Date;
         note: string | null;
+        title: string;
         time: string | null;
         done: boolean;
     }>;
     remove(id: string): Promise<{
         id: string;
         createdAt: Date;
-        title: string;
         contactId: string;
         type: string;
         date: Date;
         note: string | null;
+        title: string;
         time: string | null;
         done: boolean;
     }>;

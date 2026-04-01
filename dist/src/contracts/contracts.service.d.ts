@@ -10,6 +10,7 @@ export declare class ContractsService {
             createdAt: Date;
             phone: string | null;
             company: string | null;
+            profilClient: string | null;
             status: string;
             value: number;
             lastContact: Date | null;
@@ -22,8 +23,8 @@ export declare class ContractsService {
         createdAt: Date;
         status: string;
         value: number;
-        title: string;
         contactId: string;
+        title: string;
         startDate: Date | null;
         endDate: Date | null;
     })[]>;
@@ -35,6 +36,7 @@ export declare class ContractsService {
             createdAt: Date;
             phone: string | null;
             company: string | null;
+            profilClient: string | null;
             status: string;
             value: number;
             lastContact: Date | null;
@@ -47,8 +49,8 @@ export declare class ContractsService {
         createdAt: Date;
         status: string;
         value: number;
-        title: string;
         contactId: string;
+        title: string;
         startDate: Date | null;
         endDate: Date | null;
     }>;
@@ -60,6 +62,7 @@ export declare class ContractsService {
             createdAt: Date;
             phone: string | null;
             company: string | null;
+            profilClient: string | null;
             status: string;
             value: number;
             lastContact: Date | null;
@@ -72,8 +75,8 @@ export declare class ContractsService {
         createdAt: Date;
         status: string;
         value: number;
-        title: string;
         contactId: string;
+        title: string;
         startDate: Date | null;
         endDate: Date | null;
     }, never, import("@prisma/client/runtime/library").DefaultArgs>;
@@ -85,6 +88,7 @@ export declare class ContractsService {
             createdAt: Date;
             phone: string | null;
             company: string | null;
+            profilClient: string | null;
             status: string;
             value: number;
             lastContact: Date | null;
@@ -97,8 +101,8 @@ export declare class ContractsService {
         createdAt: Date;
         status: string;
         value: number;
-        title: string;
         contactId: string;
+        title: string;
         startDate: Date | null;
         endDate: Date | null;
     }>;
@@ -107,8 +111,8 @@ export declare class ContractsService {
         createdAt: Date;
         status: string;
         value: number;
-        title: string;
         contactId: string;
+        title: string;
         startDate: Date | null;
         endDate: Date | null;
     }>;

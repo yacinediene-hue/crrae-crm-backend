@@ -160,8 +160,10 @@ model User {
   role         String   @default("agent")
   avatar       String?
   active       Boolean  @default(true)
-  passwordHash String
-  createdAt    DateTime @default(now())
+  passwordHash       String
+  resetToken         String?
+  resetTokenExpires  DateTime?
+  createdAt          DateTime @default(now())
 }
 
 model Demande {

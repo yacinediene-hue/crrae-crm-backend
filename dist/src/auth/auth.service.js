@@ -13,11 +13,14 @@ exports.AuthService = void 0;
 const common_1 = require("@nestjs/common");
 const jwt_1 = require("@nestjs/jwt");
 const prisma_service_1 = require("../prisma/prisma.service");
+const email_service_1 = require("../email/email.service");
 const bcrypt = require("bcryptjs");
+const crypto = require("crypto");
 let AuthService = class AuthService {
-    constructor(prisma, jwtService) {
+    constructor(prisma, jwtService, emailService) {
         this.prisma = prisma;
         this.jwtService = jwtService;
+        this.emailService = emailService;
     }
     async login(email, password) {
         const user = await this.prisma.user.findUnique({ where: { email } });
@@ -40,11 +43,43 @@ let AuthService = class AuthService {
             },
         };
     }
+    async forgotPassword(email) {
+        const user = await this.prisma.user.findUnique({ where: { email } });
+        if (!user || !user.active)
+            return { message: 'Si cet email existe, un lien a été envoyé.' };
+        const token = crypto.randomBytes(32).toString('hex');
+        const expires = new Date(Date.now() + 60 * 60 * 1000);
+        await this.prisma.user.update({
+            where: { email },
+            data: { resetToken: token, resetTokenExpires: expires },
+        });
+        const frontendUrl = process.env.FRONTEND_URL || 'https://crm.relationclient-crrae.org';
+        const resetLink = `${frontendUrl}/reset-password?token=${token}`;
+        await this.emailService.envoyerResetPassword(email, user.name, resetLink);
+        return { message: 'Si cet email existe, un lien a été envoyé.' };
+    }
+    async resetPassword(token, newPassword) {
+        const user = await this.prisma.user.findFirst({
+            where: {
+                resetToken: token,
+                resetTokenExpires: { gt: new Date() },
+            },
+        });
+        if (!user)
+            throw new common_1.BadRequestException('Lien invalide ou expiré.');
+        const passwordHash = await bcrypt.hash(newPassword, 10);
+        await this.prisma.user.update({
+            where: { id: user.id },
+            data: { passwordHash, resetToken: null, resetTokenExpires: null },
+        });
+        return { message: 'Mot de passe réinitialisé avec succès.' };
+    }
 };
 exports.AuthService = AuthService;
 exports.AuthService = AuthService = __decorate([
     (0, common_1.Injectable)(),
     __metadata("design:paramtypes", [prisma_service_1.PrismaService,
-        jwt_1.JwtService])
+        jwt_1.JwtService,
+        email_service_1.EmailService])
 ], AuthService);
 //# sourceMappingURL=auth.service.js.map

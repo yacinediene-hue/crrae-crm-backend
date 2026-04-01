@@ -33,7 +33,7 @@ export class WhatsappService implements OnModuleInit {
         const count = await this.prisma.demande.count();
         const numDemande = `DEMS-${String(count + 1).padStart(5, '0')}`;
 
-        await this.prisma.demande.create({
+        const demande = await this.prisma.demande.create({
           data: {
             numDemande,
             nomPrenom: nom,
@@ -44,6 +44,16 @@ export class WhatsappService implements OnModuleInit {
             statut: 'En cours',
             dateReception: new Date(),
             typeClient: 'Actif',
+          }
+        });
+
+        await this.prisma.timeline.create({
+          data: {
+            demandeId: demande.id,
+            auteur: 'WhatsApp',
+            action: 'Message entrant',
+            canal: 'WhatsApp',
+            detail: msg.body,
           }
         });
 

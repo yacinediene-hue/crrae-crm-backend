@@ -46,6 +46,8 @@ export declare class UsersService {
         avatar: string | null;
         active: boolean;
         passwordHash: string;
+        resetToken: string | null;
+        resetTokenExpires: Date | null;
         createdAt: Date;
     }>;
 }

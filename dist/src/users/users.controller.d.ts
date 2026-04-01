@@ -1,7 +1,9 @@
 import { UsersService } from './users.service';
+import { AuditService } from '../audit/audit.service';
 export declare class UsersController {
     private service;
-    constructor(service: UsersService);
+    private audit;
+    constructor(service: UsersService, audit: AuditService);
     findAll(query: any): import(".prisma/client").Prisma.PrismaPromise<{
         id: string;
         email: string;
@@ -20,7 +22,7 @@ export declare class UsersController {
         active: boolean;
         createdAt: Date;
     }>;
-    create(body: any): Promise<{
+    create(body: any, req: any): Promise<{
         id: string;
         email: string;
         name: string;
@@ -29,7 +31,7 @@ export declare class UsersController {
         active: boolean;
         createdAt: Date;
     }>;
-    update(id: string, body: any): Promise<{
+    update(id: string, body: any, req: any): Promise<{
         id: string;
         email: string;
         name: string;
@@ -38,7 +40,7 @@ export declare class UsersController {
         active: boolean;
         createdAt: Date;
     }>;
-    remove(id: string): Promise<{
+    remove(id: string, req: any): Promise<{
         id: string;
         email: string;
         name: string;
@@ -46,6 +48,8 @@ export declare class UsersController {
         avatar: string | null;
         active: boolean;
         passwordHash: string;
+        resetToken: string | null;
+        resetTokenExpires: Date | null;
         createdAt: Date;
     }>;
 }

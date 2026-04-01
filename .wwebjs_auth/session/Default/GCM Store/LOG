@@ -1,2 +1,3 @@
-2026/03/16-23:37:19.576 2d1b2e Creating DB /Users/yacinediene/crrae-crm-backend/.wwebjs_auth/session/Default/GCM Store since it was missing.
-2026/03/16-23:37:19.625 2d1b2e Reusing MANIFEST /Users/yacinediene/crrae-crm-backend/.wwebjs_auth/session/Default/GCM Store/MANIFEST-000001
+2026/03/23-12:58:27.777 13d61e Reusing MANIFEST /Users/yacinediene/CRRAE-CRM/crrae-crm-backend/.wwebjs_auth/session/Default/GCM Store/MANIFEST-000001
+2026/03/23-12:58:27.778 13d61e Recovering log #3
+2026/03/23-12:58:27.779 13d61e Reusing old log /Users/yacinediene/CRRAE-CRM/crrae-crm-backend/.wwebjs_auth/session/Default/GCM Store/000003.log 

@@ -1,11 +1,13 @@
 import { PrismaService } from '../prisma/prisma.service';
+import { EmailService } from '../email/email.service';
 export declare class DemandesService {
     private prisma;
-    constructor(prisma: PrismaService);
+    private emailService;
+    constructor(prisma: PrismaService, emailService: EmailService);
+    private computePriorite;
+    private computeDelaiAndRespect;
     findAll(query?: any): import(".prisma/client").Prisma.PrismaPromise<{
         id: string;
-        email: string | null;
-        createdAt: Date;
         numDemande: string | null;
         nomPrenom: string;
         matricule: string | null;
@@ -15,6 +17,7 @@ export declare class DemandesService {
         heureAppel: string | null;
         canal: string | null;
         telephone: string | null;
+        email: string | null;
         objetDemande: string | null;
         commentaire: string | null;
         agentN1: string | null;
@@ -22,18 +25,19 @@ export declare class DemandesService {
         agentN2: string | null;
         dateReception: Date | null;
         dateTraitement: Date | null;
+        priorite: string | null;
         statut: string;
         actionMenee: string | null;
         delaiTraitement: number | null;
         respectDelai: string | null;
         canalCommunication: string | null;
+        enqueteEnvoyee: boolean;
         noteSatisfaction: number | null;
+        createdAt: Date;
         updatedAt: Date;
     }[]>;
     findOne(id: string): Promise<{
         id: string;
-        email: string | null;
-        createdAt: Date;
         numDemande: string | null;
         nomPrenom: string;
         matricule: string | null;
@@ -43,6 +47,7 @@ export declare class DemandesService {
         heureAppel: string | null;
         canal: string | null;
         telephone: string | null;
+        email: string | null;
         objetDemande: string | null;
         commentaire: string | null;
         agentN1: string | null;
@@ -50,18 +55,19 @@ export declare class DemandesService {
         agentN2: string | null;
         dateReception: Date | null;
         dateTraitement: Date | null;
+        priorite: string | null;
         statut: string;
         actionMenee: string | null;
         delaiTraitement: number | null;
         respectDelai: string | null;
         canalCommunication: string | null;
+        enqueteEnvoyee: boolean;
         noteSatisfaction: number | null;
+        createdAt: Date;
         updatedAt: Date;
     }>;
     create(data: any): Promise<{
         id: string;
-        email: string | null;
-        createdAt: Date;
         numDemande: string | null;
         nomPrenom: string;
         matricule: string | null;
@@ -71,34 +77,7 @@ export declare class DemandesService {
         heureAppel: string | null;
         canal: string | null;
         telephone: string | null;
-        objetDemande: string | null;
-        commentaire: string | null;
-        agentN1: string | null;
-        service: string | null;
-        agentN2: string | null;
-        dateReception: Date | null;
-        dateTraitement: Date | null;
-        statut: string;
-        actionMenee: string | null;
-        delaiTraitement: number | null;
-        respectDelai: string | null;
-        canalCommunication: string | null;
-        noteSatisfaction: number | null;
-        updatedAt: Date;
-    }>;
-    update(id: string, data: any): Promise<{
-        id: string;
         email: string | null;
-        createdAt: Date;
-        numDemande: string | null;
-        nomPrenom: string;
-        matricule: string | null;
-        adherent: string | null;
-        typeClient: string;
-        pays: string | null;
-        heureAppel: string | null;
-        canal: string | null;
-        telephone: string | null;
         objetDemande: string | null;
         commentaire: string | null;
         agentN1: string | null;
@@ -106,18 +85,20 @@ export declare class DemandesService {
         agentN2: string | null;
         dateReception: Date | null;
         dateTraitement: Date | null;
+        priorite: string | null;
         statut: string;
         actionMenee: string | null;
         delaiTraitement: number | null;
         respectDelai: string | null;
         canalCommunication: string | null;
+        enqueteEnvoyee: boolean;
         noteSatisfaction: number | null;
+        createdAt: Date;
         updatedAt: Date;
     }>;
+    update(id: string, data: any): Promise<any>;
     remove(id: string): Promise<{
         id: string;
-        email: string | null;
-        createdAt: Date;
         numDemande: string | null;
         nomPrenom: string;
         matricule: string | null;
@@ -127,6 +108,7 @@ export declare class DemandesService {
         heureAppel: string | null;
         canal: string | null;
         telephone: string | null;
+        email: string | null;
         objetDemande: string | null;
         commentaire: string | null;
         agentN1: string | null;
@@ -134,12 +116,15 @@ export declare class DemandesService {
         agentN2: string | null;
         dateReception: Date | null;
         dateTraitement: Date | null;
+        priorite: string | null;
         statut: string;
         actionMenee: string | null;
         delaiTraitement: number | null;
         respectDelai: string | null;
         canalCommunication: string | null;
+        enqueteEnvoyee: boolean;
         noteSatisfaction: number | null;
+        createdAt: Date;
         updatedAt: Date;
     }>;
 }

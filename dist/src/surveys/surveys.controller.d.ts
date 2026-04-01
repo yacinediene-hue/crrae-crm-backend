@@ -10,6 +10,7 @@ export declare class SurveysController {
             createdAt: Date;
             phone: string | null;
             company: string | null;
+            profilClient: string | null;
             status: string;
             value: number;
             lastContact: Date | null;
@@ -46,6 +47,7 @@ export declare class SurveysController {
             createdAt: Date;
             phone: string | null;
             company: string | null;
+            profilClient: string | null;
             status: string;
             value: number;
             lastContact: Date | null;
@@ -82,6 +84,7 @@ export declare class SurveysController {
             createdAt: Date;
             phone: string | null;
             company: string | null;
+            profilClient: string | null;
             status: string;
             value: number;
             lastContact: Date | null;
@@ -118,6 +121,7 @@ export declare class SurveysController {
             createdAt: Date;
             phone: string | null;
             company: string | null;
+            profilClient: string | null;
             status: string;
             value: number;
             lastContact: Date | null;

@@ -22,8 +22,6 @@ const workflows_module_1 = require("./workflows/workflows.module");
 const users_module_1 = require("./users/users.module");
 const demandes_module_1 = require("./demandes/demandes.module");
 const commentaires_module_1 = require("./commentaires/commentaires.module");
-const enquetes_module_1 = require("./enquetes/enquetes.module");
-const timeline_module_1 = require("./timeline/timeline.module");
 let AppModule = class AppModule {
 };
 exports.AppModule = AppModule;
@@ -44,9 +42,6 @@ exports.AppModule = AppModule = __decorate([
             users_module_1.UsersModule,
             demandes_module_1.DemandesModule,
             commentaires_module_1.CommentairesModule,
-            enquetes_module_1.EnquetesModule,
-            timeline_module_1.TimelineModule,
-            timeline_module_1.TimelineModule,
         ],
     })
 ], AppModule);
