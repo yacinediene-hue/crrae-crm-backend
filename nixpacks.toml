@@ -1,9 +1,0 @@
-[phases.build]
-cmds = ["npm install", "npx prisma generate", "npx nest build"]
-only_include_files = []
-
-[variables]
-NODE_ENV = "production"
-
-[start]
-cmd = "npx prisma migrate deploy && npm run start:prod"
