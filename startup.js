@@ -1,20 +1,21 @@
 const { PrismaClient } = require('@prisma/client');
-const prisma = new PrismaClient();
 
-async function applyFixes() {
+async function main() {
+  const prisma = new PrismaClient();
   try {
-    await prisma.$executeRawUnsafe(`
-      ALTER TABLE "User" ADD COLUMN IF NOT EXISTS "resetToken" TEXT;
-    `);
-    await prisma.$executeRawUnsafe(`
-      ALTER TABLE "User" ADD COLUMN IF NOT EXISTS "resetTokenExpires" TIMESTAMP(3);
-    `);
-    console.log('[startup] Colonnes resetToken vérifiées/appliquées.');
+    await prisma.$executeRawUnsafe(
+      `ALTER TABLE "User" ADD COLUMN IF NOT EXISTS "resetToken" TEXT`
+    );
+    await prisma.$executeRawUnsafe(
+      `ALTER TABLE "User" ADD COLUMN IF NOT EXISTS "resetTokenExpires" TIMESTAMP(3)`
+    );
+    console.log('[startup] resetToken columns OK');
   } catch (e) {
-    console.error('[startup] Erreur SQL fix:', e.message);
+    console.error('[startup] Error:', e.message);
+    process.exit(1);
   } finally {
     await prisma.$disconnect();
   }
 }
 
-applyFixes();
+main().then(() => process.exit(0)).catch(() => process.exit(1));
