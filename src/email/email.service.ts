@@ -5,19 +5,17 @@ import * as nodemailer from 'nodemailer';
 export class EmailService {
 
   private transporter = nodemailer.createTransport({
-    host: 'ssl0.ovh.net',
-    port: 587,
+    host: process.env.EMAIL_HOST,
+    port: Number(process.env.EMAIL_PORT),
     secure: false,
+    requireTLS: true,
     auth: {
-      user: 'support@relationclient-crrae.org',
-      pass: process.env.MAIL_PASSWORD,
+      user: process.env.EMAIL_USER,
+      pass: process.env.EMAIL_PASS,
     },
-    connectionTimeout: 30000,
-    greetingTimeout: 30000,
-    socketTimeout: 30000,
-    tls: {
-      rejectUnauthorized: false,
-    },
+    connectionTimeout: 10000,
+    greetingTimeout: 10000,
+    socketTimeout: 15000,
   });
 
   async envoyerAccuseReception(email: string, numDemande: string, nom: string) {
