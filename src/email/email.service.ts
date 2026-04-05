@@ -5,12 +5,18 @@ import * as nodemailer from 'nodemailer';
 export class EmailService {
 
   private transporter = nodemailer.createTransport({
-    host: process.env.EMAIL_HOST,
-    port: Number(process.env.EMAIL_PORT) || 465,
+    host: 'ssl0.ovh.net',
+    port: 465,
     secure: true,
     auth: {
-      user: process.env.EMAIL_USER,
-      pass: process.env.EMAIL_PASS,
+      user: 'support@relationclient-crrae.org',
+      pass: process.env.MAIL_PASSWORD,
+    },
+    connectionTimeout: 30000,
+    greetingTimeout: 30000,
+    socketTimeout: 30000,
+    tls: {
+      rejectUnauthorized: false,
     },
   });
 
@@ -38,6 +44,8 @@ CRRAE-UMOA
   }
 
   async envoyerResetPassword(email: string, nom: string, lien: string) {
+    await this.transporter.verify();
+    console.log('SMTP OK');
     await this.transporter.sendMail({
       from: `"Service Client CRRAE-UMOA" <${process.env.EMAIL_USER}>`,
       to: email,
