@@ -1,66 +1,42 @@
 import { Injectable } from '@nestjs/common';
-import * as nodemailer from 'nodemailer';
+import * as SibApiV3Sdk from 'sib-api-v3-sdk';
 
 @Injectable()
 export class EmailService {
 
-  private transporter = nodemailer.createTransport({
-    host: process.env.EMAIL_HOST,
-    port: Number(process.env.EMAIL_PORT),
-    secure: false,
-    requireTLS: true,
-    auth: {
-      user: process.env.EMAIL_USER,
-      pass: process.env.EMAIL_PASS,
-    },
-    connectionTimeout: 10000,
-    greetingTimeout: 10000,
-    socketTimeout: 15000,
-  });
+  private getApi() {
+    const client = SibApiV3Sdk.ApiClient.instance;
+    client.authentications['api-key'].apiKey = process.env.BREVO_API_KEY;
+    return new SibApiV3Sdk.TransactionalEmailsApi();
+  }
 
   async envoyerAccuseReception(email: string, numDemande: string, nom: string) {
-
-    const message = {
-      from: `"Service Client CRRAE-UMOA" <${process.env.EMAIL_USER}>`,
-      to: email,
+    await this.getApi().sendTransacEmail({
+      sender: { email: process.env.EMAIL_FROM, name: 'CRRAE-UMOA' },
+      to: [{ email }],
       subject: `Accusé de réception – ${numDemande}`,
-      text: `
-Bonjour ${nom},
-
-Votre demande a été enregistrée sous le numéro :
-
-${numDemande}
-
-Elle est actuellement en cours de traitement par nos services.
-
-Service Client
-CRRAE-UMOA
+      htmlContent: `
+        <p>Bonjour ${nom},</p>
+        <p>Votre demande a été enregistrée sous le numéro : <strong>${numDemande}</strong></p>
+        <p>Elle est actuellement en cours de traitement par nos services.</p>
+        <br/>
+        <p>Service Client<br/>CRRAE-UMOA</p>
       `,
-    };
-
-    await this.transporter.sendMail(message);
+    });
   }
 
   async envoyerResetPassword(email: string, nom: string, lien: string) {
-    await this.transporter.verify();
-    console.log('SMTP OK');
-    await this.transporter.sendMail({
-      from: `"Service Client CRRAE-UMOA" <${process.env.EMAIL_USER}>`,
-      to: email,
+    await this.getApi().sendTransacEmail({
+      sender: { email: process.env.EMAIL_FROM, name: 'CRRAE-UMOA' },
+      to: [{ email }],
       subject: 'Réinitialisation de votre mot de passe',
-      text: `
-Bonjour ${nom},
-
-Vous avez demandé la réinitialisation de votre mot de passe.
-
-Cliquez sur le lien ci-dessous (valable 1 heure) :
-
-${lien}
-
-Si vous n'êtes pas à l'origine de cette demande, ignorez cet email.
-
-Service Client
-CRRAE-UMOA
+      htmlContent: `
+        <p>Bonjour ${nom},</p>
+        <p>Vous avez demandé la réinitialisation de votre mot de passe.</p>
+        <p><a href="${lien}" style="background:#1e3a6d;color:white;padding:12px 24px;border-radius:6px;text-decoration:none;display:inline-block;">Réinitialiser mon mot de passe</a></p>
+        <p style="color:#6b7280;font-size:14px;">Ce lien est valable 1 heure. Si vous n'êtes pas à l'origine de cette demande, ignorez cet email.</p>
+        <br/>
+        <p>Service Client<br/>CRRAE-UMOA</p>
       `,
     });
   }
