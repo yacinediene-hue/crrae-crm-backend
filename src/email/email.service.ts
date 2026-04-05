@@ -6,8 +6,8 @@ export class EmailService {
 
   private transporter = nodemailer.createTransport({
     host: 'ssl0.ovh.net',
-    port: 465,
-    secure: true,
+    port: 587,
+    secure: false,
     auth: {
       user: 'support@relationclient-crrae.org',
       pass: process.env.MAIL_PASSWORD,
