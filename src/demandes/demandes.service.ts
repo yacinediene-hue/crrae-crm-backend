@@ -1,12 +1,14 @@
 import { Injectable, NotFoundException, InternalServerErrorException, BadRequestException } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { EmailService } from '../email/email.service';
+import { AuditService } from '../audit/audit.service';
 
 @Injectable()
 export class DemandesService {
   constructor(
     private prisma: PrismaService,
     private emailService: EmailService,
+    private audit: AuditService,
   ) {}
 
   private computePriorite(data: any): string {
@@ -242,19 +244,30 @@ export class DemandesService {
   }
 
   async sendSurvey(id: string, user?: any) {
+    console.log('[SURVEY] start', id);
     const demande = await this.prisma.demande.findUnique({ where: { id } });
+    console.log('[SURVEY] demande found', {
+      id: demande?.id,
+      numDemande: demande?.numDemande,
+      email: demande?.email,
+      enqueteEnvoyee: demande?.enqueteEnvoyee,
+    });
     if (!demande) throw new NotFoundException(`Demande ${id} introuvable`);
     if (!demande.email) throw new BadRequestException('Aucune adresse email sur cette demande');
 
     const baseUrl = process.env.FRONTEND_URL || 'https://crm.relationclient-crrae.org';
     const surveyLink = `${baseUrl}/enquete/${demande.numDemande}`;
 
+    console.log('[SURVEY] before email send', demande.email);
     await this.emailService.sendSurveyEmail(demande.email, demande.nomPrenom || 'Client', surveyLink, demande.numDemande);
+    console.log('[SURVEY] email sent ok');
 
+    console.log('[SURVEY] before update enqueteEnvoyee');
     const updated = await this.prisma.demande.update({
       where: { id },
       data: { enqueteEnvoyee: true, dateEnvoiEnquete: new Date() },
     });
+    console.log('[SURVEY] update done');
 
     try {
       await this.prisma.timeline.create({
@@ -267,6 +280,15 @@ export class DemandesService {
         },
       });
     } catch (e) { console.error('Erreur création timeline', e); }
+
+    this.audit.log({
+      auteur: user?.email || user?.name || 'Système',
+      auteurId: user?.id,
+      action: 'SEND_SURVEY',
+      entite: 'Demande',
+      entiteId: demande.id,
+      detail: `Enquête envoyée à ${demande.email} pour ${demande.numDemande}`,
+    });
 
     return updated;
   }
