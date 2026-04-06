@@ -38,7 +38,7 @@ export class WhatsappService implements OnModuleInit {
             numDemande,
             nomPrenom: nom,
             telephone,
-            canal: 'WhatsApp',
+            canal: 'WHATSAPP',
             objetDemande: 'Information',
             commentaire: msg.body,
             statut: 'En cours',
@@ -52,7 +52,7 @@ export class WhatsappService implements OnModuleInit {
             demandeId: demande.id,
             auteur: 'WhatsApp',
             action: 'Message entrant',
-            canal: 'WhatsApp',
+            canal: 'WHATSAPP',
             detail: msg.body,
           }
         });
