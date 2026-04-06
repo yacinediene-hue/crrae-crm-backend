@@ -74,8 +74,10 @@ export class DemandesService {
   }
 
   private sanitize(data: any): any {
+    const excluded = ['profilClient'];
     const result: any = {};
     for (const key of Object.keys(data)) {
+      if (excluded.includes(key)) continue;
       result[key] = data[key] === '' ? null : data[key];
     }
     return result;
