@@ -75,10 +75,15 @@ export class DemandesService {
 
   private sanitize(data: any): any {
     const excluded = ['profilClient'];
+    const nonNullable = ['typeClient', 'nomPrenom', 'statut'];
     const result: any = {};
     for (const key of Object.keys(data)) {
       if (excluded.includes(key)) continue;
-      result[key] = data[key] === '' ? null : data[key];
+      if (nonNullable.includes(key)) {
+        result[key] = data[key] || undefined;
+      } else {
+        result[key] = data[key] === '' ? null : data[key];
+      }
     }
     return result;
   }
