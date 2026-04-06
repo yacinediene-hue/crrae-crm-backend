@@ -73,7 +73,16 @@ export class DemandesService {
     return item;
   }
 
+  private sanitize(data: any): any {
+    const result: any = {};
+    for (const key of Object.keys(data)) {
+      result[key] = data[key] === '' ? null : data[key];
+    }
+    return result;
+  }
+
   async create(data: any) {
+    data = this.sanitize(data);
     const count = await this.prisma.demande.count();
     const numDemande = `DEMS-${String(count + 1).padStart(5, '0')}`;
 
@@ -131,6 +140,7 @@ export class DemandesService {
   }
 
   async update(id: string, data: any) {
+    data = this.sanitize(data);
     const existing = await this.findOne(id);
 
     const mergedData = {
