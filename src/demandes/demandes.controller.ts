@@ -22,6 +22,11 @@ export class DemandesController {
   @Put(':id')
   update(@Param('id') id: string, @Body() body: any) { return this.service.update(id, body); }
 
+  @Post(':id/send-survey')
+  sendSurvey(@Param('id') id: string, @Request() req: any) {
+    return this.service.sendSurvey(id, req.user);
+  }
+
   @Delete(':id')
   @Roles('admin', 'manager')
   async remove(@Param('id') id: string, @Request() req: any) {

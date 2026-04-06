@@ -203,6 +203,7 @@ model Demande {
   respectDelai       String?
   canalCommunication String?
   enqueteEnvoyee     Boolean       @default(false)
+  dateEnvoiEnquete   DateTime?
   noteSatisfaction   Int?
   createdAt          DateTime      @default(now())
   updatedAt          DateTime      @updatedAt

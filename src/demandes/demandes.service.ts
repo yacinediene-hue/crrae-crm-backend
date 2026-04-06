@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException, InternalServerErrorException } from '@nestjs/common';
+import { Injectable, NotFoundException, InternalServerErrorException, BadRequestException } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { EmailService } from '../email/email.service';
 
@@ -239,5 +239,35 @@ export class DemandesService {
   async remove(id: string) {
     await this.findOne(id);
     return this.prisma.demande.delete({ where: { id } });
+  }
+
+  async sendSurvey(id: string, user?: any) {
+    const demande = await this.prisma.demande.findUnique({ where: { id } });
+    if (!demande) throw new NotFoundException(`Demande ${id} introuvable`);
+    if (!demande.email) throw new BadRequestException('Aucune adresse email sur cette demande');
+
+    const baseUrl = process.env.FRONTEND_URL || 'https://crm.relationclient-crrae.org';
+    const surveyLink = `${baseUrl}/enquete/${demande.numDemande}`;
+
+    await this.emailService.sendSurveyEmail(demande.email, demande.nomPrenom || 'Client', surveyLink, demande.numDemande);
+
+    const updated = await this.prisma.demande.update({
+      where: { id },
+      data: { enqueteEnvoyee: true, dateEnvoiEnquete: new Date() },
+    });
+
+    try {
+      await this.prisma.timeline.create({
+        data: {
+          demandeId: demande.id,
+          auteur: user?.name || 'Système',
+          action: 'Enquête envoyée',
+          canal: 'EMAIL',
+          detail: `Enquête de satisfaction envoyée à ${demande.email}`,
+        },
+      });
+    } catch (e) { console.error('Erreur création timeline', e); }
+
+    return updated;
   }
 }
