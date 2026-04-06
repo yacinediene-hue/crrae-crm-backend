@@ -7,6 +7,17 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+enum CanalDemande {
+  EMAIL
+  TELEPHONE
+  WHATSAPP
+  SITE_WEB
+  GUICHET
+  LINKEDIN
+  FACEBOOK
+  AUTRE
+}
+
 model Contact {
   id      String  @id @default(cuid())
   name    String
@@ -175,7 +186,7 @@ model Demande {
   typeClient         String        @default("Actif")
   pays               String?
   heureAppel         String?
-  canal              String?
+  canal              CanalDemande?
   telephone          String?
   email              String?
   objetDemande       String?
