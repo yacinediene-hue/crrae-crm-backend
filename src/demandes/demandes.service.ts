@@ -136,15 +136,19 @@ export class DemandesService {
       },
     });
 
-    await this.prisma.timeline.create({
-      data: {
-        demandeId: demande.id,
-        auteur: data.agentN1 || 'Système',
-        action: 'Demande créée',
-        canal: data.canal || 'CRM',
-        detail: `Objet: ${data.objetDemande || 'Non précisé'} — Statut initial: ${data.statut || 'En cours'}`,
-      },
-    });
+    try {
+      await this.prisma.timeline.create({
+        data: {
+          demandeId: demande.id,
+          auteur: data.agentN1 || 'Système',
+          action: 'Demande créée',
+          canal: data.canal || 'CRM',
+          detail: `Objet: ${data.objetDemande || 'Non précisé'} — Statut initial: ${data.statut || 'En cours'}`,
+        },
+      });
+    } catch (e) {
+      console.error('Erreur création timeline', e);
+    }
 
     if (demande.email) {
       this.emailService.envoyerAccuseReception(
