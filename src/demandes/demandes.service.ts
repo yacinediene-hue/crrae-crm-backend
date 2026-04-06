@@ -90,8 +90,19 @@ export class DemandesService {
 
   async create(data: any) {
     data = this.sanitize(data);
-    const count = await this.prisma.demande.count();
-    const numDemande = `DEMS-${String(count + 1).padStart(5, '0')}`;
+
+    const last = await this.prisma.demande.findFirst({
+      where: { numDemande: { startsWith: 'DEMS-' } },
+      orderBy: { createdAt: 'desc' },
+      select: { numDemande: true },
+    });
+
+    let nextNumber = 1;
+    if (last?.numDemande) {
+      const match = last.numDemande.match(/DEMS-(\d+)/);
+      if (match) nextNumber = Number(match[1]) + 1;
+    }
+    const numDemande = `DEMS-${String(nextNumber).padStart(5, '0')}`;
 
     const dateReception = data.dateReception ? new Date(data.dateReception) : null;
     const dateTraitement = data.dateTraitement ? new Date(data.dateTraitement) : null;
