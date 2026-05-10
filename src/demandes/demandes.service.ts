@@ -99,6 +99,7 @@ export class DemandesService {
 
   async create(data: any) {
     data = this.sanitize(data);
+    console.log('[create] nomPrenom:', data.nomPrenom, '| canal:', data.canal, '| statut:', data.statut);
 
     const last = await this.prisma.demande.findFirst({
       where: { numDemande: { startsWith: 'DEMS-' } },
@@ -119,31 +120,28 @@ export class DemandesService {
       ? parseInt(data.noteSatisfaction, 10)
       : null;
 
-    const computedData = {
-      ...data,
-      dateReception,
-      dateTraitement,
-    };
-
+    const computedData = { ...data, dateReception, dateTraitement };
     const metrics = this.computeDelaiAndRespect(computedData);
+    const priorite = this.computePriorite({ ...computedData, ...metrics });
 
-    const priorite = this.computePriorite({
-      ...computedData,
-      ...metrics,
-    });
-
-    const demande = await this.prisma.demande.create({
-      data: {
-        ...data,
-        numDemande,
-        dateReception,
-        dateTraitement,
-        noteSatisfaction,
-        delaiTraitement: metrics.delaiTraitement,
-        respectDelai: metrics.respectDelai,
-        priorite,
-      },
-    });
+    let demande: any;
+    try {
+      demande = await this.prisma.demande.create({
+        data: {
+          ...data,
+          numDemande,
+          dateReception,
+          dateTraitement,
+          noteSatisfaction,
+          delaiTraitement: metrics.delaiTraitement,
+          respectDelai: metrics.respectDelai,
+          priorite,
+        },
+      });
+    } catch (e: any) {
+      console.error('[create] Prisma error:', e?.message, JSON.stringify(e?.meta));
+      throw new InternalServerErrorException(`Erreur création: ${e?.message}`);
+    }
 
     try {
       await this.prisma.timeline.create({
