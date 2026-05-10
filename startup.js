@@ -2,52 +2,53 @@ const { PrismaClient } = require('@prisma/client');
 
 async function main() {
   const prisma = new PrismaClient();
+  const exec = (sql) => prisma.$executeRawUnsafe(sql);
   try {
-    // Fix User — resetToken columns
-    await prisma.$executeRawUnsafe(
-      `ALTER TABLE "User" ADD COLUMN IF NOT EXISTS "resetToken" TEXT`
-    );
-    await prisma.$executeRawUnsafe(
-      `ALTER TABLE "User" ADD COLUMN IF NOT EXISTS "resetTokenExpires" TIMESTAMP(3)`
-    );
+    // User
+    await exec(`ALTER TABLE "User" ADD COLUMN IF NOT EXISTS "resetToken" TEXT`);
+    await exec(`ALTER TABLE "User" ADD COLUMN IF NOT EXISTS "resetTokenExpires" TIMESTAMP(3)`);
 
-    // Fix Deal — colonnes ajoutées dans 20260329232010_refonte_deals_adhesions
-    // ADD avec default null pour éviter l'erreur NOT NULL sur table non vide
-    await prisma.$executeRawUnsafe(
-      `ALTER TABLE "Deal" ADD COLUMN IF NOT EXISTS "nomPrenom" TEXT`
-    );
-    await prisma.$executeRawUnsafe(
-      `ALTER TABLE "Deal" ADD COLUMN IF NOT EXISTS "updatedAt" TIMESTAMP(3)`
-    );
-    await prisma.$executeRawUnsafe(
-      `ALTER TABLE "Deal" ADD COLUMN IF NOT EXISTS "agentResponsable" TEXT`
-    );
-    await prisma.$executeRawUnsafe(
-      `ALTER TABLE "Deal" ADD COLUMN IF NOT EXISTS "canalAcquisition" TEXT`
-    );
-    await prisma.$executeRawUnsafe(
-      `ALTER TABLE "Deal" ADD COLUMN IF NOT EXISTS "commentaire" TEXT`
-    );
-    await prisma.$executeRawUnsafe(
-      `ALTER TABLE "Deal" ADD COLUMN IF NOT EXISTS "dateActivation" TIMESTAMP(3)`
-    );
-    await prisma.$executeRawUnsafe(
-      `ALTER TABLE "Deal" ADD COLUMN IF NOT EXISTS "dateDemande" TIMESTAMP(3)`
-    );
-    await prisma.$executeRawUnsafe(
-      `ALTER TABLE "Deal" ADD COLUMN IF NOT EXISTS "dateValidation" TIMESTAMP(3)`
-    );
+    // Contact
+    await exec(`ALTER TABLE "Contact" ADD COLUMN IF NOT EXISTS "profilClient" TEXT`);
 
-    // Demande — niveaux de traitement N1/N2
-    await prisma.$executeRawUnsafe(
-      `ALTER TABLE "Demande" ADD COLUMN IF NOT EXISTS "niveauTraitement" INTEGER DEFAULT 1`
-    );
-    await prisma.$executeRawUnsafe(
-      `ALTER TABLE "Demande" ADD COLUMN IF NOT EXISTS "dateEscalade" TIMESTAMP(3)`
-    );
-    await prisma.$executeRawUnsafe(
-      `ALTER TABLE "Demande" ADD COLUMN IF NOT EXISTS "commentaireEscalade" TEXT`
-    );
+    // Deal
+    await exec(`ALTER TABLE "Deal" ADD COLUMN IF NOT EXISTS "nomPrenom" TEXT`);
+    await exec(`ALTER TABLE "Deal" ADD COLUMN IF NOT EXISTS "updatedAt" TIMESTAMP(3)`);
+    await exec(`ALTER TABLE "Deal" ADD COLUMN IF NOT EXISTS "agentResponsable" TEXT`);
+    await exec(`ALTER TABLE "Deal" ADD COLUMN IF NOT EXISTS "canalAcquisition" TEXT`);
+    await exec(`ALTER TABLE "Deal" ADD COLUMN IF NOT EXISTS "commentaire" TEXT`);
+    await exec(`ALTER TABLE "Deal" ADD COLUMN IF NOT EXISTS "dateActivation" TIMESTAMP(3)`);
+    await exec(`ALTER TABLE "Deal" ADD COLUMN IF NOT EXISTS "dateDemande" TIMESTAMP(3)`);
+    await exec(`ALTER TABLE "Deal" ADD COLUMN IF NOT EXISTS "dateValidation" TIMESTAMP(3)`);
+
+    // Campaign
+    await exec(`ALTER TABLE "Campaign" ADD COLUMN IF NOT EXISTS "canal" TEXT`);
+    await exec(`ALTER TABLE "Campaign" ADD COLUMN IF NOT EXISTS "content" TEXT`);
+    await exec(`ALTER TABLE "Campaign" ADD COLUMN IF NOT EXISTS "profilClient" TEXT`);
+    await exec(`ALTER TABLE "Campaign" ADD COLUMN IF NOT EXISTS "statut" TEXT DEFAULT 'draft'`);
+    await exec(`ALTER TABLE "Campaign" ADD COLUMN IF NOT EXISTS "tag" TEXT`);
+    await exec(`ALTER TABLE "Campaign" ADD COLUMN IF NOT EXISTS "dateEnvoi" TIMESTAMP(3)`);
+
+    // AuditLog
+    await exec(`CREATE TABLE IF NOT EXISTS "AuditLog" (
+      "id" TEXT NOT NULL,
+      "auteur" TEXT NOT NULL,
+      "auteurId" TEXT,
+      "action" TEXT NOT NULL,
+      "entite" TEXT NOT NULL,
+      "entiteId" TEXT,
+      "detail" TEXT,
+      "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+      CONSTRAINT "AuditLog_pkey" PRIMARY KEY ("id")
+    )`);
+
+    // Demande
+    await exec(`ALTER TABLE "Demande" ADD COLUMN IF NOT EXISTS "priorite" TEXT DEFAULT 'Moyen'`);
+    await exec(`ALTER TABLE "Demande" ADD COLUMN IF NOT EXISTS "enqueteEnvoyee" BOOLEAN NOT NULL DEFAULT false`);
+    await exec(`ALTER TABLE "Demande" ADD COLUMN IF NOT EXISTS "dateEnvoiEnquete" TIMESTAMP(3)`);
+    await exec(`ALTER TABLE "Demande" ADD COLUMN IF NOT EXISTS "niveauTraitement" INTEGER NOT NULL DEFAULT 1`);
+    await exec(`ALTER TABLE "Demande" ADD COLUMN IF NOT EXISTS "dateEscalade" TIMESTAMP(3)`);
+    await exec(`ALTER TABLE "Demande" ADD COLUMN IF NOT EXISTS "commentaireEscalade" TEXT`);
 
     console.log('[startup] Schema fixes applied OK');
   } catch (e) {
