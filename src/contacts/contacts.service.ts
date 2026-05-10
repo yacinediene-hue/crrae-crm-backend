@@ -131,12 +131,20 @@ export class ContactsService {
 
     for (const [contactEmail, d] of seen) {
       try {
-        const existing = await this.prisma.contact.findFirst({ where: { email: contactEmail } });
-        if (existing) {
-          await this.prisma.contact.update({ where: { id: existing.id }, data: { name: d.name, phone: d.telephone || existing.phone } });
+        const rows: any[] = await this.prisma.$queryRaw`
+          SELECT id, phone FROM "Contact" WHERE email = ${contactEmail} LIMIT 1
+        `;
+        if (rows.length > 0) {
+          await this.prisma.$executeRaw`
+            UPDATE "Contact" SET name = ${d.name}, phone = ${d.telephone || rows[0].phone} WHERE id = ${rows[0].id}
+          `;
           mises_a_jour++;
         } else {
-          await this.prisma.contact.create({ data: { name: d.name, email: contactEmail, phone: d.telephone, status: 'client', profilClient: d.typeClient } });
+          await this.prisma.$executeRaw`
+            INSERT INTO "Contact" (id, name, email, phone, status, "createdAt")
+            VALUES (gen_random_uuid()::text, ${d.name}, ${contactEmail}, ${d.telephone}, 'client', NOW())
+            ON CONFLICT (email) DO NOTHING
+          `;
           crees++;
         }
       } catch (e: any) {
