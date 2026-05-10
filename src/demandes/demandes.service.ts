@@ -89,7 +89,10 @@ export class DemandesService {
         continue;
       }
       if (nonNullable.includes(key)) {
-        result[key] = data[key] || undefined;
+        if (key === 'nomPrenom') result[key] = data[key] || 'Non renseigné';
+        else if (key === 'typeClient') result[key] = data[key] || 'Actif';
+        else if (key === 'statut') result[key] = data[key] || 'En cours';
+        else result[key] = data[key] || undefined;
       } else {
         result[key] = data[key] === '' ? null : data[key];
       }
