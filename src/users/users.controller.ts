@@ -6,7 +6,6 @@ import { Roles } from '../auth/roles.decorator';
 import { AuditService } from '../audit/audit.service';
 
 @UseGuards(JwtAuthGuard, RolesGuard)
-@Roles('admin')
 @Controller('users')
 export class UsersController {
   constructor(private service: UsersService, private audit: AuditService) {}
@@ -17,6 +16,7 @@ export class UsersController {
   @Get(':id')
   findOne(@Param('id') id: string) { return this.service.findOne(id); }
 
+  @Roles('admin')
   @Post()
   async create(@Body() body: any, @Request() req: any) {
     const result = await this.service.create(body);
@@ -24,6 +24,7 @@ export class UsersController {
     return result;
   }
 
+  @Roles('admin')
   @Put(':id')
   async update(@Param('id') id: string, @Body() body: any, @Request() req: any) {
     const result = await this.service.update(id, body);
@@ -35,6 +36,7 @@ export class UsersController {
     return result;
   }
 
+  @Roles('admin')
   @Delete(':id')
   async remove(@Param('id') id: string, @Request() req: any) {
     const target = await this.service.findOne(id);
