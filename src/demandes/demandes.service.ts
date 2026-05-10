@@ -167,18 +167,23 @@ export class DemandesService {
     data = this.sanitize(data);
     const existing = await this.findOne(id);
 
+    const resolvedDateTraitement = data.dateTraitement
+      ? new Date(data.dateTraitement)
+      : data.statut === 'Traité' && !existing.dateTraitement
+        ? new Date()
+        : existing.dateTraitement;
+
+    const resolvedStatut = data.statut
+      ?? (resolvedDateTraitement ? 'Traité' : 'En cours');
+
     const mergedData = {
       ...existing,
       ...data,
+      statut: resolvedStatut,
       dateReception: data.dateReception
         ? new Date(data.dateReception)
         : existing.dateReception,
-      dateTraitement:
-        data.dateTraitement
-          ? new Date(data.dateTraitement)
-          : data.statut === 'Traité' && !existing.dateTraitement
-            ? new Date()
-            : existing.dateTraitement,
+      dateTraitement: resolvedDateTraitement,
       noteSatisfaction:
         data.noteSatisfaction !== undefined && data.noteSatisfaction !== null && data.noteSatisfaction !== ''
           ? parseInt(data.noteSatisfaction, 10)
@@ -198,6 +203,7 @@ export class DemandesService {
         where: { id },
         data: {
           ...data,
+          statut: resolvedStatut,
           dateReception: mergedData.dateReception,
           dateTraitement: mergedData.dateTraitement,
           noteSatisfaction: mergedData.noteSatisfaction,
@@ -211,14 +217,14 @@ export class DemandesService {
       throw new InternalServerErrorException(`Erreur Prisma: ${e?.message}`);
     }
 
-    if (data.statut && data.statut !== existing.statut) {
+    if (resolvedStatut && resolvedStatut !== existing.statut) {
       await this.prisma.timeline.create({
         data: {
           demandeId: id,
           auteur: data.agentN1 || existing.agentN1 || 'Système',
           action: 'Statut modifié',
           canal: 'CRM',
-          detail: `Statut changé : ${existing.statut} → ${data.statut}`,
+          detail: `Statut changé : ${existing.statut} → ${resolvedStatut}`,
         },
       });
     }
