@@ -75,12 +75,19 @@ export class DemandesService {
     return item;
   }
 
+  private static readonly VALID_CANAUX = ['EMAIL','TELEPHONE','WHATSAPP','SITE_WEB','GUICHET','LINKEDIN','FACEBOOK','AUTRE'];
+
   private sanitize(data: any): any {
     const excluded = ['profilClient', 'niveauTraitement', 'dateEscalade', 'commentaireEscalade'];
     const nonNullable = ['typeClient', 'nomPrenom', 'statut'];
     const result: any = {};
     for (const key of Object.keys(data)) {
       if (excluded.includes(key)) continue;
+      if (key === 'canal') {
+        const v = data[key];
+        result[key] = v && DemandesService.VALID_CANAUX.includes(v) ? v : null;
+        continue;
+      }
       if (nonNullable.includes(key)) {
         result[key] = data[key] || undefined;
       } else {
