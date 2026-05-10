@@ -17,7 +17,21 @@ export class ContactsService {
         { company: { contains: query.search, mode: 'insensitive' } },
       ];
     }
-    return this.prisma.contact.findMany({ where, orderBy: { createdAt: 'desc' } });
+    return this.prisma.contact.findMany({
+      where,
+      orderBy: { createdAt: 'desc' },
+      select: {
+        id: true, name: true, email: true, phone: true, company: true,
+        status: true, value: true, lastContact: true, tags: true,
+        notes: true, createdAt: true, assignedTo: true, profilClient: true,
+      },
+    }).catch(() =>
+      this.prisma.$queryRaw`
+        SELECT id, name, email, phone, company, status, value,
+               "lastContact", tags, notes, "createdAt", "assignedTo"
+        FROM "Contact" ORDER BY "createdAt" DESC
+      `
+    );
   }
 
   async findOne(id: string) {
