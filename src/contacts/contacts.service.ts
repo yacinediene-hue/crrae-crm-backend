@@ -104,6 +104,56 @@ export class ContactsService {
     };
   }
 
+  async syncFromDemandes() {
+    const demandes = await this.prisma.demande.findMany({
+      where: { OR: [{ telephone: { not: null } }, { email: { not: null } }] },
+      select: { nomPrenom: true, telephone: true, email: true, typeClient: true, matricule: true, pays: true },
+    });
+
+    // Dédoublonnage : une entrée par email (ou par téléphone si pas d'email)
+    const seen = new Map<string, typeof demandes[0]>();
+    for (const d of demandes) {
+      const key = (d.email || '').trim().toLowerCase() || `tel_${(d.telephone || '').trim()}`;
+      if (key && key !== 'tel_' && !seen.has(key)) seen.set(key, d);
+    }
+
+    let crees = 0, mises_a_jour = 0, ignores = 0;
+
+    for (const [, d] of seen) {
+      const name = (d.nomPrenom || '').trim();
+      if (!name) { ignores++; continue; }
+
+      const emailReel = (d.email || '').trim().toLowerCase() || null;
+      const emailCle = emailReel || `tel_${(d.telephone || '').trim()}@import.crrae`;
+
+      try {
+        const existing = await this.prisma.contact.findFirst({ where: { email: emailCle } });
+        if (existing) {
+          await this.prisma.contact.update({
+            where: { id: existing.id },
+            data: { name, phone: d.telephone || existing.phone },
+          });
+          mises_a_jour++;
+        } else {
+          await this.prisma.contact.create({
+            data: {
+              name,
+              email: emailCle,
+              phone: d.telephone || null,
+              status: 'client',
+              profilClient: d.typeClient || null,
+            },
+          });
+          crees++;
+        }
+      } catch (e) {
+        ignores++;
+      }
+    }
+
+    return { crees, mises_a_jour, ignores, total: seen.size };
+  }
+
   async update(id: string, data: any) {
     await this.findOne(id);
     return this.prisma.contact.update({ where: { id }, data });

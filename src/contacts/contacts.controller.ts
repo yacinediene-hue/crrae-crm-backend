@@ -27,6 +27,14 @@ export class ContactsController {
     return result;
   }
 
+  @Post('sync-from-demandes')
+  @Roles('admin', 'manager')
+  async syncFromDemandes(@Request() req: any) {
+    const result = await this.service.syncFromDemandes();
+    this.audit.log({ auteur: req.user.email, auteurId: req.user.id, action: 'SYNC_CONTACTS_FROM_DEMANDES', entite: 'Contact', detail: `${result.crees} créés, ${result.mises_a_jour} mis à jour, ${result.ignores} ignorés` });
+    return result;
+  }
+
   @Put(':id')
   update(@Param('id') id: string, @Body() body: any) { return this.service.update(id, body); }
 
