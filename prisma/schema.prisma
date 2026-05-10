@@ -202,11 +202,14 @@ model Demande {
   delaiTraitement    Int?
   respectDelai       String?
   canalCommunication String?
-  enqueteEnvoyee     Boolean       @default(false)
-  dateEnvoiEnquete   DateTime?
-  noteSatisfaction   Int?
-  createdAt          DateTime      @default(now())
-  updatedAt          DateTime      @updatedAt
+  enqueteEnvoyee       Boolean       @default(false)
+  dateEnvoiEnquete     DateTime?
+  noteSatisfaction     Int?
+  niveauTraitement     Int           @default(1)
+  dateEscalade         DateTime?
+  commentaireEscalade  String?
+  createdAt            DateTime      @default(now())
+  updatedAt            DateTime      @updatedAt
   commentaires       Commentaire[]
   timeline           Timeline[]
 }

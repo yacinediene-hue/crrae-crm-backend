@@ -27,6 +27,11 @@ export class DemandesController {
     return this.service.sendSurvey(id, req.user);
   }
 
+  @Post(':id/escalader')
+  escalader(@Param('id') id: string, @Body() body: any, @Request() req: any) {
+    return this.service.escalader(id, body, req.user);
+  }
+
   @Delete(':id')
   @Roles('admin', 'manager')
   async remove(@Param('id') id: string, @Request() req: any) {

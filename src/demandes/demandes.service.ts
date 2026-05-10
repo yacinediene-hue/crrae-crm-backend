@@ -76,7 +76,7 @@ export class DemandesService {
   }
 
   private sanitize(data: any): any {
-    const excluded = ['profilClient'];
+    const excluded = ['profilClient', 'niveauTraitement', 'dateEscalade', 'commentaireEscalade'];
     const nonNullable = ['typeClient', 'nomPrenom', 'statut'];
     const result: any = {};
     for (const key of Object.keys(data)) {
@@ -206,7 +206,7 @@ export class DemandesService {
           priorite,
         },
       });
-    } catch (e) {
+    } catch (e: any) {
       console.error('[demandes.update] Prisma error:', e?.message, JSON.stringify(e?.meta));
       throw new InternalServerErrorException(`Erreur Prisma: ${e?.message}`);
     }
@@ -288,6 +288,47 @@ export class DemandesService {
       entite: 'Demande',
       entiteId: demande.id,
       detail: `Enquête envoyée à ${demande.email} pour ${demande.numDemande}`,
+    });
+
+    return updated;
+  }
+
+  async escalader(id: string, data: { agentN2?: string; service?: string; motif?: string }, user?: any) {
+    const demande = await this.findOne(id);
+    if ((demande as any).niveauTraitement === 2) {
+      throw new BadRequestException('Cette demande est déjà escaladée au niveau 2');
+    }
+
+    const updated = await this.prisma.demande.update({
+      where: { id },
+      data: {
+        niveauTraitement: 2,
+        dateEscalade: new Date(),
+        commentaireEscalade: data.motif || null,
+        agentN2: data.agentN2 || demande.agentN2,
+        service: data.service || demande.service,
+      },
+    });
+
+    try {
+      await this.prisma.timeline.create({
+        data: {
+          demandeId: id,
+          auteur: user?.name || demande.agentN1 || 'Système',
+          action: 'Escalade N2',
+          canal: 'CRM',
+          detail: `Escaladée vers ${data.agentN2 || '—'} (${data.service || '—'})${data.motif ? ` — Motif : ${data.motif}` : ''}`,
+        },
+      });
+    } catch (e) { console.error('[escalader] timeline error', e); }
+
+    this.audit.log({
+      auteur: user?.email || user?.name || 'Système',
+      auteurId: user?.id,
+      action: 'ESCALADE_N2',
+      entite: 'Demande',
+      entiteId: id,
+      detail: `Escalade vers ${data.agentN2 || '—'} / ${data.service || '—'}`,
     });
 
     return updated;

@@ -38,6 +38,17 @@ async function main() {
       `ALTER TABLE "Deal" ADD COLUMN IF NOT EXISTS "dateValidation" TIMESTAMP(3)`
     );
 
+    // Demande — niveaux de traitement N1/N2
+    await prisma.$executeRawUnsafe(
+      `ALTER TABLE "Demande" ADD COLUMN IF NOT EXISTS "niveauTraitement" INTEGER DEFAULT 1`
+    );
+    await prisma.$executeRawUnsafe(
+      `ALTER TABLE "Demande" ADD COLUMN IF NOT EXISTS "dateEscalade" TIMESTAMP(3)`
+    );
+    await prisma.$executeRawUnsafe(
+      `ALTER TABLE "Demande" ADD COLUMN IF NOT EXISTS "commentaireEscalade" TEXT`
+    );
+
     console.log('[startup] Schema fixes applied OK');
   } catch (e) {
     console.error('[startup] Error:', e.message);
