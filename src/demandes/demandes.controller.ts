@@ -32,6 +32,16 @@ export class DemandesController {
     return this.service.escalader(id, body, req.user);
   }
 
+  @Post(':id/prendre-en-charge')
+  prendreEnCharge(@Param('id') id: string, @Request() req: any) {
+    return this.service.prendreEnCharge(id, req.user);
+  }
+
+  @Post(':id/renvoyer-n1')
+  renvoyerN1(@Param('id') id: string, @Body() body: any, @Request() req: any) {
+    return this.service.renvoyerN1(id, body, req.user);
+  }
+
   @Delete(':id')
   @Roles('admin', 'manager')
   async remove(@Param('id') id: string, @Request() req: any) {

@@ -317,6 +317,7 @@ export class DemandesService {
       where: { id },
       data: {
         niveauTraitement: 2,
+        statut: 'Escaladé',
         dateEscalade: new Date(),
         commentaireEscalade: data.motif || null,
         agentN2: data.agentN2 || demande.agentN2,
@@ -343,6 +344,83 @@ export class DemandesService {
       entite: 'Demande',
       entiteId: id,
       detail: `Escalade vers ${data.agentN2 || '—'} / ${data.service || '—'}`,
+    });
+
+    return updated;
+  }
+
+  async prendreEnCharge(id: string, user?: any) {
+    const demande = await this.findOne(id);
+    if ((demande as any).niveauTraitement !== 2) {
+      throw new BadRequestException('Cette demande n\'est pas au niveau N2');
+    }
+
+    const updated = await this.prisma.demande.update({
+      where: { id },
+      data: {
+        statut: 'En cours N2',
+        agentN2: user?.name || (demande as any).agentN2,
+      },
+    });
+
+    try {
+      await this.prisma.timeline.create({
+        data: {
+          demandeId: id,
+          auteur: user?.name || 'Système',
+          action: 'Prise en charge N2',
+          canal: 'CRM',
+          detail: `Prise en charge par ${user?.name || '—'} (Back Office)`,
+        },
+      });
+    } catch (e) { console.error('[prendreEnCharge] timeline error', e); }
+
+    this.audit.log({
+      auteur: user?.email || user?.name || 'Système',
+      auteurId: user?.id,
+      action: 'PRISE_EN_CHARGE_N2',
+      entite: 'Demande',
+      entiteId: id,
+      detail: `Prise en charge par ${user?.name || '—'}`,
+    });
+
+    return updated;
+  }
+
+  async renvoyerN1(id: string, data: { motif?: string }, user?: any) {
+    const demande = await this.findOne(id);
+    if ((demande as any).niveauTraitement !== 2) {
+      throw new BadRequestException('Cette demande n\'est pas au niveau N2');
+    }
+
+    const updated = await this.prisma.demande.update({
+      where: { id },
+      data: {
+        niveauTraitement: 1,
+        statut: 'En cours',
+        commentaireEscalade: null,
+      },
+    });
+
+    try {
+      await this.prisma.timeline.create({
+        data: {
+          demandeId: id,
+          auteur: user?.name || 'Système',
+          action: 'Renvoi N1',
+          canal: 'CRM',
+          detail: `Renvoyée au Front Office${data.motif ? ` — Motif : ${data.motif}` : ''}`,
+        },
+      });
+    } catch (e) { console.error('[renvoyerN1] timeline error', e); }
+
+    this.audit.log({
+      auteur: user?.email || user?.name || 'Système',
+      auteurId: user?.id,
+      action: 'RENVOI_N1',
+      entite: 'Demande',
+      entiteId: id,
+      detail: `Renvoi N1 par ${user?.name || '—'}${data.motif ? ` — ${data.motif}` : ''}`,
     });
 
     return updated;
