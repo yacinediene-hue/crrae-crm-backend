@@ -1,5 +1,5 @@
 import { Controller, Get, Post, Put, Delete, Param, Body, Query, UseGuards, Request } from '@nestjs/common';
-import { DemandesService } from './demandes.service';
+import { DemandesService, AGENTS_N2 } from './demandes.service';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 import { RolesGuard } from '../auth/roles.guard';
 import { Roles } from '../auth/roles.decorator';
@@ -9,6 +9,9 @@ import { AuditService } from '../audit/audit.service';
 @Controller('demandes')
 export class DemandesController {
   constructor(private service: DemandesService, private audit: AuditService) {}
+
+  @Get('agents-n2')
+  getAgentsN2() { return AGENTS_N2; }
 
   @Get()
   findAll(@Query() query: any) { return this.service.findAll(query); }
