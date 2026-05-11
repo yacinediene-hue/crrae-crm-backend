@@ -175,10 +175,14 @@ export class ContactsService {
           `;
           mises_a_jour++;
         } else {
-          await this.prisma.$executeRaw`
-            INSERT INTO "Contact" (id, name, email, phone, status, value, tags, "createdAt")
-            VALUES (gen_random_uuid()::text, ${d.name}, ${d.email}, ${d.telephone}, 'client', 0, ARRAY[]::TEXT[], NOW())
-          `;
+          await this.prisma.$executeRawUnsafe(
+            `INSERT INTO "Contact" (id, name, email, phone, status, value, tags, "createdAt")
+             VALUES (gen_random_uuid()::text, $1, $2, $3, 'client', 0, '{}', NOW())
+             ON CONFLICT (email) DO NOTHING`,
+            d.name,
+            d.email,     // null → SQL NULL (paramètre positionnel)
+            d.telephone  // null → SQL NULL
+          );
           crees++;
         }
       } catch (e: any) {
