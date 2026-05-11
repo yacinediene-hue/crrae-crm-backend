@@ -346,6 +346,27 @@ export class DemandesService {
       detail: `Escalade vers ${data.agentN2 || '—'} / ${data.service || '—'}`,
     });
 
+    // Notification email à l'agent N2
+    if (data.agentN2) {
+      const agentN2User = await this.prisma.user.findFirst({
+        where: { name: { equals: data.agentN2, mode: 'insensitive' } },
+        select: { email: true, name: true },
+      });
+      if (agentN2User?.email) {
+        const baseUrl = process.env.FRONTEND_URL || 'https://crm.relationclient-crrae.org';
+        this.emailService.envoyerNotificationEscalade({
+          toEmail: agentN2User.email,
+          toNom: agentN2User.name,
+          numDemande: demande.numDemande || id,
+          nomClient: demande.nomPrenom,
+          service: data.service || demande.service || '',
+          motif: data.motif || '',
+          agentN1: demande.agentN1 || '',
+          lienCrm: `${baseUrl}/demandes`,
+        }).catch(e => console.error('[escalade] email N2 non envoyé:', e?.message));
+      }
+    }
+
     return updated;
   }
 
