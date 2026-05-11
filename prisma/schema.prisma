@@ -167,7 +167,7 @@ model Workflow {
 model User {
   id           String   @id @default(cuid())
   name         String
-  email        String   @unique
+  email        String?  @unique
   role         String   @default("agent")
   avatar       String?
   active       Boolean  @default(true)
