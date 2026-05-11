@@ -146,11 +146,13 @@ export class ContactsService {
       });
     }
 
+    console.log(`[sync] ${rows.length} demandes lues, ${seen.size} contacts uniques à traiter`);
+
     let crees = 0, mises_a_jour = 0, ignores = 0;
+    const premiereErreur: string[] = [];
 
     for (const [key, d] of seen) {
       try {
-        // Recherche du contact existant : par email d'abord, puis par téléphone
         let existing: any[] = [];
         if (d.email) {
           existing = await this.prisma.$queryRaw`
@@ -180,12 +182,15 @@ export class ContactsService {
           crees++;
         }
       } catch (e: any) {
-        console.error('[sync] erreur contact', key, e?.message);
+        const msg = e?.message || 'Erreur inconnue';
+        console.error('[sync] erreur contact', key, msg);
+        if (premiereErreur.length < 3) premiereErreur.push(`${key}: ${msg}`);
         ignores++;
       }
     }
 
-    return { crees, mises_a_jour, ignores, total: seen.size };
+    console.log(`[sync] terminé — créés: ${crees}, màj: ${mises_a_jour}, ignorés: ${ignores}`);
+    return { crees, mises_a_jour, ignores, total: seen.size, premiereErreur };
   }
 
   async update(id: string, data: any) {
