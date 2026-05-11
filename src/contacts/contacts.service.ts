@@ -166,22 +166,29 @@ export class ContactsService {
         }
 
         if (existing.length > 0) {
-          await this.prisma.$executeRaw`
-            UPDATE "Contact"
-            SET name  = ${d.name},
-                email = COALESCE(email, ${d.email}),
-                phone = COALESCE(phone, ${d.telephone})
-            WHERE id = ${existing[0].id}
-          `;
+          await this.prisma.$executeRawUnsafe(
+            `UPDATE "Contact"
+             SET name          = $1,
+                 email         = COALESCE(email, $2),
+                 phone         = COALESCE(phone, $3),
+                 "profilClient" = COALESCE("profilClient", $4)
+             WHERE id = $5`,
+            d.name,
+            d.email,
+            d.telephone,
+            d.typeClient,
+            existing[0].id
+          );
           mises_a_jour++;
         } else {
           await this.prisma.$executeRawUnsafe(
-            `INSERT INTO "Contact" (id, name, email, phone, status, value, tags, "createdAt")
-             VALUES (gen_random_uuid()::text, $1, $2, $3, 'client', 0, '{}', NOW())
+            `INSERT INTO "Contact" (id, name, email, phone, "profilClient", status, value, tags, "createdAt")
+             VALUES (gen_random_uuid()::text, $1, $2, $3, $4, 'client', 0, '{}', NOW())
              ON CONFLICT (email) DO NOTHING`,
             d.name,
-            d.email,     // null → SQL NULL (paramètre positionnel)
-            d.telephone  // null → SQL NULL
+            d.email,
+            d.telephone,
+            d.typeClient  // typeClient demande → profilClient contact
           );
           crees++;
         }
