@@ -21,7 +21,7 @@ enum CanalDemande {
 model Contact {
   id      String  @id @default(cuid())
   name    String
-  email   String  @unique
+  email   String? @unique
   phone   String?
   company String?
 

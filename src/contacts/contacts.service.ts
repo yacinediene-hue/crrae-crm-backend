@@ -130,39 +130,56 @@ export class ContactsService {
       WHERE telephone IS NOT NULL OR email IS NOT NULL
     `;
 
-    // Dédoublonnage par email puis par téléphone
+    // Dédoublonnage : clé = email (priorité) ou téléphone
     const seen = new Map<string, any>();
     for (const d of rows) {
       const email = n(d.email)?.toLowerCase() || null;
       const tel   = n(d.telephone);
       const key   = email || (tel ? `tel_${tel}` : null);
       if (!key || seen.has(key)) continue;
-      const contactEmail = email || `tel_${tel}@import.crrae`;
-      seen.set(contactEmail, { name: n(d.nomPrenom) || 'Non renseigné', telephone: tel, typeClient: n(d.typeClient) });
+      seen.set(key, {
+        name:      n(d.nomPrenom) || 'Non renseigné',
+        email,           // null si absent — pas de faux email
+        telephone: tel,  // null si absent
+        typeClient: n(d.typeClient),
+      });
     }
 
     let crees = 0, mises_a_jour = 0, ignores = 0;
 
-    for (const [contactEmail, d] of seen) {
+    for (const [key, d] of seen) {
       try {
-        const rows: any[] = await this.prisma.$queryRaw`
-          SELECT id, phone FROM "Contact" WHERE email = ${contactEmail} LIMIT 1
-        `;
-        if (rows.length > 0) {
+        // Recherche du contact existant : par email d'abord, puis par téléphone
+        let existing: any[] = [];
+        if (d.email) {
+          existing = await this.prisma.$queryRaw`
+            SELECT id, phone FROM "Contact" WHERE email = ${d.email} LIMIT 1
+          `;
+        }
+        if (existing.length === 0 && d.telephone) {
+          existing = await this.prisma.$queryRaw`
+            SELECT id, phone FROM "Contact" WHERE phone = ${d.telephone} LIMIT 1
+          `;
+        }
+
+        if (existing.length > 0) {
           await this.prisma.$executeRaw`
-            UPDATE "Contact" SET name = ${d.name}, phone = ${d.telephone || rows[0].phone} WHERE id = ${rows[0].id}
+            UPDATE "Contact"
+            SET name  = ${d.name},
+                email = COALESCE(email, ${d.email}),
+                phone = COALESCE(phone, ${d.telephone})
+            WHERE id = ${existing[0].id}
           `;
           mises_a_jour++;
         } else {
           await this.prisma.$executeRaw`
             INSERT INTO "Contact" (id, name, email, phone, status, "createdAt")
-            VALUES (gen_random_uuid()::text, ${d.name}, ${contactEmail}, ${d.telephone}, 'client', NOW())
-            ON CONFLICT (email) DO NOTHING
+            VALUES (gen_random_uuid()::text, ${d.name}, ${d.email}, ${d.telephone}, 'client', NOW())
           `;
           crees++;
         }
       } catch (e: any) {
-        console.error('[sync] erreur contact', contactEmail, e?.message);
+        console.error('[sync] erreur contact', key, e?.message);
         ignores++;
       }
     }

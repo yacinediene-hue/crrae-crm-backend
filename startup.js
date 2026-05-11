@@ -10,6 +10,7 @@ async function main() {
 
     // Contact
     await exec(`ALTER TABLE "Contact" ADD COLUMN IF NOT EXISTS "profilClient" TEXT`);
+    await exec(`ALTER TABLE "Contact" ALTER COLUMN "email" DROP NOT NULL`);
 
     // Deal
     await exec(`ALTER TABLE "Deal" ADD COLUMN IF NOT EXISTS "nomPrenom" TEXT`);
