@@ -127,7 +127,8 @@ export class ContactsService {
     const rows: any[] = await this.prisma.$queryRaw`
       SELECT "nomPrenom", telephone, email, "typeClient"
       FROM "Demande"
-      WHERE telephone IS NOT NULL OR email IS NOT NULL
+      WHERE (telephone IS NOT NULL AND trim(telephone) != '')
+         OR (email    IS NOT NULL AND trim(email)    != '')
     `;
 
     // Dédoublonnage : clé = email (priorité) ou téléphone
