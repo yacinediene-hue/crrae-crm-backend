@@ -30,18 +30,24 @@ async function main() {
     await exec(`ALTER TABLE "Campaign" ADD COLUMN IF NOT EXISTS "tag" TEXT`);
     await exec(`ALTER TABLE "Campaign" ADD COLUMN IF NOT EXISTS "dateEnvoi" TIMESTAMP(3)`);
 
-    // AuditLog
+    // AuditLog — créer si absent, puis ajouter les colonnes manquantes
     await exec(`CREATE TABLE IF NOT EXISTS "AuditLog" (
       "id" TEXT NOT NULL,
-      "auteur" TEXT NOT NULL,
+      "auteur" TEXT NOT NULL DEFAULT 'Système',
       "auteurId" TEXT,
-      "action" TEXT NOT NULL,
-      "entite" TEXT NOT NULL,
+      "action" TEXT NOT NULL DEFAULT '',
+      "entite" TEXT NOT NULL DEFAULT '',
       "entiteId" TEXT,
       "detail" TEXT,
       "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
       CONSTRAINT "AuditLog_pkey" PRIMARY KEY ("id")
     )`);
+    await exec(`ALTER TABLE "AuditLog" ADD COLUMN IF NOT EXISTS "auteur"   TEXT NOT NULL DEFAULT 'Système'`);
+    await exec(`ALTER TABLE "AuditLog" ADD COLUMN IF NOT EXISTS "auteurId" TEXT`);
+    await exec(`ALTER TABLE "AuditLog" ADD COLUMN IF NOT EXISTS "action"   TEXT NOT NULL DEFAULT ''`);
+    await exec(`ALTER TABLE "AuditLog" ADD COLUMN IF NOT EXISTS "entite"   TEXT NOT NULL DEFAULT ''`);
+    await exec(`ALTER TABLE "AuditLog" ADD COLUMN IF NOT EXISTS "entiteId" TEXT`);
+    await exec(`ALTER TABLE "AuditLog" ADD COLUMN IF NOT EXISTS "detail"   TEXT`);
 
     // Demande
     await exec(`ALTER TABLE "Demande" ADD COLUMN IF NOT EXISTS "priorite" TEXT DEFAULT 'Moyen'`);
