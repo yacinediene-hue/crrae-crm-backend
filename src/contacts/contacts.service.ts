@@ -176,8 +176,8 @@ export class ContactsService {
           mises_a_jour++;
         } else {
           await this.prisma.$executeRaw`
-            INSERT INTO "Contact" (id, name, email, phone, status, "createdAt")
-            VALUES (gen_random_uuid()::text, ${d.name}, ${d.email}, ${d.telephone}, 'client', NOW())
+            INSERT INTO "Contact" (id, name, email, phone, status, value, tags, "createdAt")
+            VALUES (gen_random_uuid()::text, ${d.name}, ${d.email}, ${d.telephone}, 'client', 0, ARRAY[]::TEXT[], NOW())
           `;
           crees++;
         }
