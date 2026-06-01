@@ -97,6 +97,63 @@ export class EmailService {
     }
   }
 
+  async envoyerAlerteSla(params: {
+    toEmail: string; toNom: string;
+    dossiers: { numDemande: string; nomPrenom: string; objetDemande: string; statut: string; service: string; dateReception: string; delaiMax: number; joursEcoules: number }[];
+    baseUrl: string;
+  }) {
+    const { toEmail, toNom, dossiers, baseUrl } = params;
+    const lignes = dossiers.map(d => `
+      <tr style="border-bottom:1px solid #e2e8f0;">
+        <td style="padding:0.5rem 0.75rem;font-weight:600;color:#2b6cb0;">${d.numDemande}</td>
+        <td style="padding:0.5rem 0.75rem;">${d.nomPrenom}</td>
+        <td style="padding:0.5rem 0.75rem;font-size:0.85rem;">${d.objetDemande}</td>
+        <td style="padding:0.5rem 0.75rem;">${d.service}</td>
+        <td style="padding:0.5rem 0.75rem;">${d.dateReception}</td>
+        <td style="padding:0.5rem 0.75rem;color:#c53030;font-weight:700;">${d.joursEcoules}j <span style="color:#718096;font-weight:400;">(max ${d.delaiMax}j)</span></td>
+        <td style="padding:0.5rem 0.75rem;">
+          <span style="background:#fffbeb;color:#b7791f;padding:2px 8px;border-radius:20px;font-size:0.8rem;">${d.statut}</span>
+        </td>
+      </tr>`).join('');
+    try {
+      await this.getApi().sendTransacEmail({
+        sender: { email: process.env.EMAIL_FROM, name: 'CRRAE-UMOA CRM' },
+        to: [{ email: toEmail, name: toNom }],
+        subject: `⚠️ ${dossiers.length} demande(s) hors SLA — Action requise`,
+        htmlContent: `
+          <div style="font-family:Arial,sans-serif;color:#1f2937;max-width:700px;">
+            <div style="background:#c53030;padding:1rem 1.5rem;border-radius:8px 8px 0 0;">
+              <h2 style="color:white;margin:0;font-size:1.1rem;">⚠️ Alerte SLA — Demandes hors délai</h2>
+            </div>
+            <div style="border:1px solid #e2e8f0;border-top:none;padding:1.25rem 1.5rem;border-radius:0 0 8px 8px;background:#fff5f5;">
+              <p>Bonjour <strong>${toNom}</strong>,</p>
+              <p>Les demandes suivantes dépassent le délai de traitement et nécessitent une action immédiate :</p>
+              <table style="width:100%;border-collapse:collapse;font-size:0.88rem;background:white;border-radius:8px;overflow:hidden;margin:1rem 0;">
+                <thead>
+                  <tr style="background:#f8fafc;">
+                    <th style="padding:0.5rem 0.75rem;text-align:left;color:#718096;font-size:0.78rem;text-transform:uppercase;">N°</th>
+                    <th style="padding:0.5rem 0.75rem;text-align:left;color:#718096;font-size:0.78rem;text-transform:uppercase;">Client</th>
+                    <th style="padding:0.5rem 0.75rem;text-align:left;color:#718096;font-size:0.78rem;text-transform:uppercase;">Objet</th>
+                    <th style="padding:0.5rem 0.75rem;text-align:left;color:#718096;font-size:0.78rem;text-transform:uppercase;">Service</th>
+                    <th style="padding:0.5rem 0.75rem;text-align:left;color:#718096;font-size:0.78rem;text-transform:uppercase;">Réception</th>
+                    <th style="padding:0.5rem 0.75rem;text-align:left;color:#718096;font-size:0.78rem;text-transform:uppercase;">Délai</th>
+                    <th style="padding:0.5rem 0.75rem;text-align:left;color:#718096;font-size:0.78rem;text-transform:uppercase;">Statut</th>
+                  </tr>
+                </thead>
+                <tbody>${lignes}</tbody>
+              </table>
+              <p style="text-align:center;margin-top:1rem;">
+                <a href="${baseUrl}/demandes?filtre=horsSla" style="display:inline-block;padding:0.7rem 1.5rem;background:#c53030;color:white;text-decoration:none;border-radius:6px;font-weight:600;">
+                  Traiter maintenant →
+                </a>
+              </p>
+              <p style="color:#718096;font-size:0.8rem;margin-top:1rem;">CRRAE-UMOA — CRM Service Client · Alerte automatique</p>
+            </div>
+          </div>`,
+      });
+    } catch (e: any) { console.error('[BREVO] alerte SLA error', e?.message); }
+  }
+
   async envoyerResetPassword(email: string, nom: string, lien: string) {
     await this.getApi().sendTransacEmail({
       sender: { email: process.env.EMAIL_FROM, name: 'CRRAE-UMOA' },
