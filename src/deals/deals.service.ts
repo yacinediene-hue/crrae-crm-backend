@@ -51,7 +51,6 @@ export class DealsService {
     payload.etapeAdhesion  = payload.etapeAdhesion  || 'Prospect identifié';
     payload.typeClient     = payload.typeClient      || 'Individuel';
     payload.nomPrenom      = payload.nomPrenom       || 'Non renseigné';
-    payload.title          = payload.nomPrenom; // ancienne colonne NOT NULL héritée du schéma initial
 
     try {
       return await this.prisma.deal.create({ data: payload });
