@@ -16,6 +16,11 @@ async function main() {
     await exec(`ALTER TABLE "User" ALTER COLUMN "email" DROP NOT NULL`);
 
     // Deal — toutes les colonnes de 20260329232010_refonte_deals_adhesions
+    // DROP NOT NULL sur les colonnes héritées du schéma initial
+    await exec(`ALTER TABLE "Deal" ALTER COLUMN "contactId" DROP NOT NULL`);
+    await exec(`ALTER TABLE "Deal" ALTER COLUMN "title" DROP NOT NULL`);
+    await exec(`ALTER TABLE "Deal" ALTER COLUMN "title" SET DEFAULT ''`);
+    await exec(`ALTER TABLE "Deal" ALTER COLUMN "value" DROP NOT NULL`);
     await exec(`ALTER TABLE "Deal" ADD COLUMN IF NOT EXISTS "nomPrenom" TEXT`);
     await exec(`UPDATE "Deal" SET "nomPrenom" = 'Non renseigné' WHERE "nomPrenom" IS NULL`);
     await exec(`ALTER TABLE "Deal" ALTER COLUMN "title" DROP NOT NULL`);
