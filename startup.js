@@ -15,8 +15,19 @@ async function main() {
     // User
     await exec(`ALTER TABLE "User" ALTER COLUMN "email" DROP NOT NULL`);
 
-    // Deal
+    // Deal — toutes les colonnes de 20260329232010_refonte_deals_adhesions
     await exec(`ALTER TABLE "Deal" ADD COLUMN IF NOT EXISTS "nomPrenom" TEXT`);
+    await exec(`ALTER TABLE "Deal" ADD COLUMN IF NOT EXISTS "institution" TEXT`);
+    await exec(`ALTER TABLE "Deal" ADD COLUMN IF NOT EXISTS "pays" TEXT`);
+    await exec(`ALTER TABLE "Deal" ADD COLUMN IF NOT EXISTS "telephone" TEXT`);
+    await exec(`ALTER TABLE "Deal" ADD COLUMN IF NOT EXISTS "email" TEXT`);
+    await exec(`ALTER TABLE "Deal" ADD COLUMN IF NOT EXISTS "typeClient" TEXT DEFAULT 'Individuel'`);
+    await exec(`ALTER TABLE "Deal" ADD COLUMN IF NOT EXISTS "typeAdhesion" TEXT`);
+    await exec(`ALTER TABLE "Deal" ADD COLUMN IF NOT EXISTS "modeAdhesion" TEXT`);
+    await exec(`ALTER TABLE "Deal" ADD COLUMN IF NOT EXISTS "etapeAdhesion" TEXT DEFAULT 'Prospect identifié'`);
+    await exec(`ALTER TABLE "Deal" ADD COLUMN IF NOT EXISTS "documentsAttendus" TEXT`);
+    await exec(`ALTER TABLE "Deal" ADD COLUMN IF NOT EXISTS "documentsManquants" TEXT`);
+    await exec(`ALTER TABLE "Deal" ADD COLUMN IF NOT EXISTS "service" TEXT`);
     await exec(`ALTER TABLE "Deal" ADD COLUMN IF NOT EXISTS "updatedAt" TIMESTAMP(3)`);
     await exec(`ALTER TABLE "Deal" ADD COLUMN IF NOT EXISTS "agentResponsable" TEXT`);
     await exec(`ALTER TABLE "Deal" ADD COLUMN IF NOT EXISTS "canalAcquisition" TEXT`);
