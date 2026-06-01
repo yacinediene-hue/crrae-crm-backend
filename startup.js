@@ -17,6 +17,9 @@ async function main() {
 
     // Deal — toutes les colonnes de 20260329232010_refonte_deals_adhesions
     await exec(`ALTER TABLE "Deal" ADD COLUMN IF NOT EXISTS "nomPrenom" TEXT`);
+    await exec(`UPDATE "Deal" SET "nomPrenom" = 'Non renseigné' WHERE "nomPrenom" IS NULL`);
+    await exec(`ALTER TABLE "Deal" ALTER COLUMN "title" DROP NOT NULL`);
+    await exec(`ALTER TABLE "Deal" ALTER COLUMN "title" SET DEFAULT ''`);
     await exec(`ALTER TABLE "Deal" ADD COLUMN IF NOT EXISTS "institution" TEXT`);
     await exec(`ALTER TABLE "Deal" ADD COLUMN IF NOT EXISTS "pays" TEXT`);
     await exec(`ALTER TABLE "Deal" ADD COLUMN IF NOT EXISTS "telephone" TEXT`);
