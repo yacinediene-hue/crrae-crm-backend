@@ -78,6 +78,17 @@ model Deal {
   updatedAt      DateTime? @updatedAt
 }
 
+model DocumentDemande {
+  id        String   @id @default(cuid())
+  demandeId String
+  demande   Demande  @relation(fields: [demandeId], references: [id], onDelete: Cascade)
+  nom       String
+  type      String
+  taille    Int
+  contenu   Bytes
+  createdAt DateTime @default(now())
+}
+
 model PieceJointe {
   id        String   @id @default(cuid())
   dealId    String
@@ -225,6 +236,7 @@ model Demande {
   updatedAt            DateTime      @updatedAt
   commentaires       Commentaire[]
   timeline           Timeline[]
+  documents          DocumentDemande[]
 }
 
 model Commentaire {
