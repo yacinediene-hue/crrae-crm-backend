@@ -15,6 +15,7 @@ import { WorkflowsModule } from './workflows/workflows.module';
 import { UsersModule } from './users/users.module';
 import { DemandesModule } from './demandes/demandes.module';
 import { CommentairesModule } from './commentaires/commentaires.module';
+import { DocumentsModule } from './documents/documents.module';
 
 @Module({
   imports: [
@@ -32,6 +33,7 @@ import { CommentairesModule } from './commentaires/commentaires.module';
     UsersModule,
     DemandesModule,
     CommentairesModule,
+    DocumentsModule,
   ],
 })
 export class AppModule {}
