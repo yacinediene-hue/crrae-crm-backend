@@ -49,7 +49,8 @@ model Deal {
   contactId String?
   contact   Contact? @relation(fields: [contactId], references: [id])
 
-  nomPrenom   String  @default("Non renseigné")
+  title       String  @default("")
+  nomPrenom   String? @default("Non renseigné")
   institution String?
   pays        String?
   telephone   String?

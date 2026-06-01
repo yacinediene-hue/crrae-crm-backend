@@ -51,6 +51,7 @@ export class DealsService {
     payload.etapeAdhesion  = payload.etapeAdhesion  || 'Prospect identifié';
     payload.typeClient     = payload.typeClient      || 'Individuel';
     payload.nomPrenom      = payload.nomPrenom       || 'Non renseigné';
+    payload.title          = payload.nomPrenom; // satisfait la contrainte NOT NULL héritée
 
     try {
       return await this.prisma.deal.create({ data: payload });
