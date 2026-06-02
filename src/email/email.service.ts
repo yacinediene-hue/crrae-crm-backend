@@ -4,6 +4,10 @@ import * as SibApiV3Sdk from 'sib-api-v3-sdk';
 @Injectable()
 export class EmailService {
 
+  private isDisabled(): boolean {
+    return process.env.DISABLE_EMAILS === 'true';
+  }
+
   private getApi() {
     const client = SibApiV3Sdk.ApiClient.instance;
     client.authentications['api-key'].apiKey = process.env.BREVO_API_KEY;
@@ -11,6 +15,7 @@ export class EmailService {
   }
 
   async envoyerAccuseReception(email: string, numDemande: string, nom: string) {
+    if (this.isDisabled()) { console.log('[EMAIL] désactivé — accusé de réception non envoyé'); return; }
     await this.getApi().sendTransacEmail({
       sender: { email: process.env.EMAIL_FROM, name: 'CRRAE-UMOA' },
       to: [{ email }],
@@ -26,6 +31,7 @@ export class EmailService {
   }
 
   async sendSurveyEmail(to: string, nom: string, surveyLink: string, numDemande: string) {
+    if (this.isDisabled()) { console.log('[EMAIL] désactivé — enquête non envoyée'); return; }
     console.log('[BREVO] sendSurveyEmail called', { to, nom, numDemande });
     try {
       await this.getApi().sendTransacEmail({
@@ -61,6 +67,7 @@ export class EmailService {
     lienCrm: string;
   }) {
     const { toEmail, toNom, numDemande, nomClient, service, motif, agentN1, lienCrm } = params;
+    if (this.isDisabled()) { console.log('[EMAIL] désactivé — escalade non notifiée'); return; }
     try {
       await this.getApi().sendTransacEmail({
         sender: { email: process.env.EMAIL_FROM, name: 'CRRAE-UMOA CRM' },
@@ -103,6 +110,7 @@ export class EmailService {
     baseUrl: string;
   }) {
     const { toEmail, toNom, dossiers, baseUrl } = params;
+    if (this.isDisabled()) { console.log('[EMAIL] désactivé — alerte SLA non envoyée'); return; }
     const lignes = dossiers.map(d => `
       <tr style="border-bottom:1px solid #e2e8f0;">
         <td style="padding:0.5rem 0.75rem;font-weight:600;color:#2b6cb0;">${d.numDemande}</td>
