@@ -81,7 +81,7 @@ export class DemandesService {
   private static readonly VALID_CANAUX = ['EMAIL','TELEPHONE','WHATSAPP','SITE_WEB','GUICHET','LINKEDIN','FACEBOOK','AUTRE'];
 
   private sanitize(data: any): any {
-    const excluded = ['profilClient', 'niveauTraitement', 'dateEscalade', 'commentaireEscalade'];
+    const excluded = ['profilClient', 'niveauTraitement', 'dateEscalade', 'commentaireEscalade', 'skipEmail'];
     const nonNullable = ['typeClient', 'nomPrenom', 'statut'];
     const result: any = {};
     for (const key of Object.keys(data)) {
@@ -163,7 +163,7 @@ export class DemandesService {
       console.error('Erreur création timeline', e);
     }
 
-    if (demande.email) {
+    if (demande.email && !data.skipEmail) {
       this.emailService.envoyerAccuseReception(
         demande.email,
         demande.numDemande,
