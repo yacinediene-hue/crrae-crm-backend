@@ -272,8 +272,7 @@ export class DemandesService {
     if (!demande) throw new NotFoundException(`Demande ${id} introuvable`);
     if (!demande.email) throw new BadRequestException('Aucune adresse email sur cette demande');
 
-    const baseUrl = process.env.FRONTEND_URL || 'https://crm.relationclient-crrae.org';
-    const surveyLink = `${baseUrl}/enquete/${demande.numDemande}`;
+    const surveyLink = `https://forms.office.com/r/Wy6ukuKUpF?r=${encodeURIComponent(demande.numDemande || demande.id)}`;
 
     console.log('[SURVEY] before email send', demande.email);
     await this.emailService.sendSurveyEmail(demande.email, demande.nomPrenom || 'Client', surveyLink, demande.numDemande);
