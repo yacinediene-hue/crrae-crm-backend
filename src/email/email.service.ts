@@ -8,6 +8,14 @@ export class EmailService {
     return process.env.DISABLE_EMAILS === 'true';
   }
 
+  private isAccuseDisabled(): boolean {
+    return this.isDisabled() || process.env.DISABLE_ACCUSE_RECEPTION === 'true';
+  }
+
+  private isEnqueteDisabled(): boolean {
+    return this.isDisabled() || process.env.DISABLE_ENQUETE === 'true';
+  }
+
   private getApi() {
     const client = SibApiV3Sdk.ApiClient.instance;
     client.authentications['api-key'].apiKey = process.env.BREVO_API_KEY;
@@ -15,7 +23,7 @@ export class EmailService {
   }
 
   async envoyerAccuseReception(email: string, numDemande: string, nom: string) {
-    if (this.isDisabled()) { console.log('[EMAIL] désactivé — accusé de réception non envoyé'); return; }
+    if (this.isAccuseDisabled()) { console.log('[EMAIL] accusé de réception suspendu'); return; }
     await this.getApi().sendTransacEmail({
       sender: { email: process.env.EMAIL_FROM, name: 'CRRAE-UMOA' },
       to: [{ email }],
@@ -31,7 +39,7 @@ export class EmailService {
   }
 
   async sendSurveyEmail(to: string, nom: string, surveyLink: string, numDemande: string) {
-    if (this.isDisabled()) { console.log('[EMAIL] désactivé — enquête non envoyée'); return; }
+    if (this.isEnqueteDisabled()) { console.log('[EMAIL] enquête suspendue'); return; }
     console.log('[BREVO] sendSurveyEmail called', { to, nom, numDemande });
     try {
       await this.getApi().sendTransacEmail({
