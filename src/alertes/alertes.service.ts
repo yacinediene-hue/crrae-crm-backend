@@ -5,7 +5,7 @@ import { EmailService } from '../email/email.service';
 
 const STATUTS_CLOS = ['Traité', 'Clôturé'];
 const DELAIS: Record<string, number> = {
-  DPM: 3, DPR: 5, DSI: 6, PATRIMOINE: 7, DCR: 5, DFC: 5, DRUC: 5, REGISSEUR: 5, Autre: 5,
+  DPM: 3, DPR: 5, DDSI: 6, PATRIMOINE: 7, DCR: 5, DFC: 5, DRUC: 5, REGISSEUR: 5, Autre: 5,
 };
 
 @Injectable()

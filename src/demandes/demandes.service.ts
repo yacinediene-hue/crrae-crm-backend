@@ -37,7 +37,7 @@ export class DemandesService {
       const delaisService: Record<string, number> = {
         DPM: 3,
         DPR: 5,
-        DSI: 6,
+        DDSI: 6,
         PATRIMOINE: 7,
         DCR: 5,
         REGISSEUR: 5,
