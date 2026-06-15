@@ -4,7 +4,7 @@ import { EmailService } from '../email/email.service';
 import { AuditService } from '../audit/audit.service';
 
 // Agents Back Office (N2) — peuvent aussi traiter en N1
-export const AGENTS_N2 = ['Michèle KACOU', 'Fatty KOUAME', 'Ismael COULIBALY', 'Yacine DIENE'];
+export const AGENTS_N2 = ['KACOU Michèle', 'Fatty KOUAME', 'Ismael COULIBALY', 'Yacine DIENE'];
 
 @Injectable()
 export class DemandesService {
