@@ -168,7 +168,7 @@ ${byCanal.map(c => `• ${c.canal} : ${c.nb} (${total > 0 ? Math.round(c.nb / to
     let message: Awaited<ReturnType<typeof this.anthropic.messages.create>>;
     try {
       message = await this.anthropic.messages.create({
-        model: 'claude-opus-4-8',
+        model: 'claude-haiku-4-5-20251001',
         max_tokens: 2500,
         system: `Tu es un expert senior en relation client et en analyse de données pour des institutions financières d'Afrique de l'Ouest. Tu rédiges des rapports pour le Comité de Direction de la CRRAE-UMOA (Caisse de Retraite et de Renouvellement des Agents des États de l'UMOA), une institution de retraite servant les fonctionnaires des 8 pays de l'UMOA.
 
