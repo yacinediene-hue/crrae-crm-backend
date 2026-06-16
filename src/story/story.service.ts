@@ -1,4 +1,4 @@
-import { Injectable, InternalServerErrorException } from '@nestjs/common';
+import { Injectable, InternalServerErrorException, Logger } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import Anthropic from '@anthropic-ai/sdk';
 
@@ -11,10 +11,11 @@ const CANAL_LABELS: Record<string, string> = {
 
 @Injectable()
 export class StoryService {
+  private readonly logger = new Logger(StoryService.name);
   private anthropic: Anthropic;
 
   constructor(private prisma: PrismaService) {
-    this.anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
+    this.anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY || '' });
   }
 
   async generateReport(body: {
@@ -164,10 +165,12 @@ ${byCanal.map(c => `• ${c.canal} : ${c.nb} (${total > 0 ? Math.round(c.nb / to
 
     const typeInstruction = typeMap[body.type || 'complet'] || typeMap.complet;
 
-    const message = await this.anthropic.messages.create({
-      model: 'claude-opus-4-8',
-      max_tokens: 2500,
-      system: `Tu es un expert senior en relation client et en analyse de données pour des institutions financières d'Afrique de l'Ouest. Tu rédiges des rapports pour le Comité de Direction de la CRRAE-UMOA (Caisse de Retraite et de Renouvellement des Agents des États de l'UMOA), une institution de retraite servant les fonctionnaires des 8 pays de l'UMOA.
+    let message: Awaited<ReturnType<typeof this.anthropic.messages.create>>;
+    try {
+      message = await this.anthropic.messages.create({
+        model: 'claude-opus-4-8',
+        max_tokens: 2500,
+        system: `Tu es un expert senior en relation client et en analyse de données pour des institutions financières d'Afrique de l'Ouest. Tu rédiges des rapports pour le Comité de Direction de la CRRAE-UMOA (Caisse de Retraite et de Renouvellement des Agents des États de l'UMOA), une institution de retraite servant les fonctionnaires des 8 pays de l'UMOA.
 
 RÈGLES ABSOLUES :
 - Rédige exclusivement en français professionnel et impeccable
@@ -179,11 +182,19 @@ RÈGLES ABSOLUES :
 - Les recommandations doivent être concrètes et actionnables
 
 ${typeInstruction}`,
-      messages: [{
-        role: 'user',
-        content: `Voici les données du service client CRRAE-UMOA pour ${periodeLabel} :\n\n${dataSummary}\n\nGénère le rapport pour le Comité de Direction.`,
-      }],
-    });
+        messages: [{
+          role: 'user',
+          content: `Voici les données du service client CRRAE-UMOA pour ${periodeLabel} :\n\n${dataSummary}\n\nGénère le rapport pour le Comité de Direction.`,
+        }],
+      });
+    } catch (e: any) {
+      this.logger.error('[StoryService] Erreur Anthropic API:', e?.message, e?.status, e?.error);
+      const status = e?.status;
+      if (status === 401) throw new InternalServerErrorException('Clé API Anthropic invalide ou expirée (401). Vérifiez ANTHROPIC_API_KEY sur Railway.');
+      if (status === 429) throw new InternalServerErrorException('Limite de débit Anthropic atteinte. Réessayez dans quelques instants (429).');
+      if (status === 529 || e?.message?.includes('overloaded')) throw new InternalServerErrorException('L\'API Anthropic est momentanément surchargée. Réessayez dans quelques secondes.');
+      throw new InternalServerErrorException(`Erreur API Anthropic : ${e?.message || 'erreur inconnue'}`);
+    }
 
     const rapport = message.content[0].type === 'text' ? message.content[0].text : '';
 
