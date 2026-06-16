@@ -187,15 +187,48 @@ ${typeInstruction}`,
 
     const rapport = message.content[0].type === 'text' ? message.content[0].text : '';
 
+    // Statuts distribution for chart
+    const byStatut = [
+      { name: 'Traité / Clôturé', value: traites, color: '#276749' },
+      { name: 'En cours',         value: enCours,   color: '#2b6cb0' },
+      { name: 'En attente',       value: enAttente,  color: '#b7791f' },
+      { name: 'Escaladé N2',      value: escalades,  color: '#6b46c1' },
+    ].filter(s => s.value > 0);
+
+    // Satisfaction distribution
+    const passifs = notes.filter(n => n === 3).length;
+    const satisfaction = notes.length > 0 ? [
+      { name: 'Satisfaits (≥4/5)',    value: promoteurs,  color: '#276749' },
+      { name: 'Neutres (3/5)',         value: passifs,     color: '#b7791f' },
+      { name: 'Insatisfaits (≤2/5)',  value: detracteurs, color: '#c53030' },
+    ].filter(s => s.value > 0) : [];
+
     return {
       rapport,
+      analytics: {
+        byStatut,
+        byService,
+        byAgent,
+        byType,
+        byCanal,
+        satisfaction,
+      },
       metadata: {
         periode: periodeLabel,
         genereLe: now.toISOString(),
         totalDemandes: total,
+        traites,
+        enCours,
+        enAttente,
+        escalades,
+        horsSla,
         tauxTraite,
         tauxSla,
+        delaiMoyen,
         moyNote,
+        nps,
+        notesCount: notes.length,
+        enquetesEnvoyees: filtered.filter(d => (d as any).enqueteEnvoyee).length,
         tokensUtilises: message.usage.input_tokens + message.usage.output_tokens,
       },
     };
