@@ -170,6 +170,115 @@ export class EmailService {
     } catch (e: any) { console.error('[BREVO] alerte SLA error', e?.message); }
   }
 
+  async envoyerAlerteApprocheDelai(params: {
+    toEmail: string; toNom: string;
+    dossiers: { numDemande: string; nomPrenom: string; objetDemande: string; statut: string; service: string; dateReception: string; delaiMax: number; joursEcoules: number; joursRestants: number; pctUtilise: number }[];
+    baseUrl: string;
+  }) {
+    const { toEmail, toNom, dossiers, baseUrl } = params;
+    if (this.isDisabled()) { console.log('[EMAIL] désactivé — approche délai non envoyée'); return; }
+    const lignes = dossiers.map(d => `
+      <tr style="border-bottom:1px solid #e2e8f0;">
+        <td style="padding:0.5rem 0.75rem;font-weight:600;color:#2b6cb0;">${d.numDemande}</td>
+        <td style="padding:0.5rem 0.75rem;">${d.nomPrenom}</td>
+        <td style="padding:0.5rem 0.75rem;font-size:0.85rem;">${d.objetDemande}</td>
+        <td style="padding:0.5rem 0.75rem;">${d.service}</td>
+        <td style="padding:0.5rem 0.75rem;">${d.dateReception}</td>
+        <td style="padding:0.5rem 0.75rem;color:#b7791f;font-weight:700;">${d.joursRestants}j restant${d.joursRestants > 1 ? 's' : ''} / ${d.delaiMax}j</td>
+        <td style="padding:0.5rem 0.75rem;">
+          <div style="background:#e2e8f0;border-radius:99px;height:8px;width:80px;overflow:hidden;">
+            <div style="width:${d.pctUtilise}%;height:100%;background:${d.pctUtilise >= 90 ? '#c53030' : '#b7791f'};border-radius:99px;"></div>
+          </div>
+          <span style="font-size:0.75rem;color:#718096;">${d.pctUtilise}%</span>
+        </td>
+      </tr>`).join('');
+    try {
+      await this.getApi().sendTransacEmail({
+        sender: { email: process.env.EMAIL_FROM, name: 'CRRAE-UMOA CRM' },
+        to: [{ email: toEmail, name: toNom }],
+        subject: `🟡 ${dossiers.length} demande(s) approchant le délai SLA — Action requise`,
+        htmlContent: `
+          <div style="font-family:Arial,sans-serif;color:#1f2937;max-width:700px;">
+            <div style="background:#b7791f;padding:1rem 1.5rem;border-radius:8px 8px 0 0;">
+              <h2 style="color:white;margin:0;font-size:1.1rem;">🟡 Alerte délai — Demandes à traiter rapidement</h2>
+            </div>
+            <div style="border:1px solid #e2e8f0;border-top:none;padding:1.25rem 1.5rem;border-radius:0 0 8px 8px;background:#fffbeb;">
+              <p>Bonjour <strong>${toNom}</strong>,</p>
+              <p>Les demandes suivantes approchent de leur délai SLA. Merci de les prendre en charge rapidement :</p>
+              <table style="width:100%;border-collapse:collapse;font-size:0.88rem;background:white;border-radius:8px;overflow:hidden;margin:1rem 0;">
+                <thead><tr style="background:#f8fafc;">
+                  <th style="padding:0.5rem 0.75rem;text-align:left;color:#718096;font-size:0.78rem;text-transform:uppercase;">N°</th>
+                  <th style="padding:0.5rem 0.75rem;text-align:left;color:#718096;font-size:0.78rem;text-transform:uppercase;">Client</th>
+                  <th style="padding:0.5rem 0.75rem;text-align:left;color:#718096;font-size:0.78rem;text-transform:uppercase;">Objet</th>
+                  <th style="padding:0.5rem 0.75rem;text-align:left;color:#718096;font-size:0.78rem;text-transform:uppercase;">Service</th>
+                  <th style="padding:0.5rem 0.75rem;text-align:left;color:#718096;font-size:0.78rem;text-transform:uppercase;">Réception</th>
+                  <th style="padding:0.5rem 0.75rem;text-align:left;color:#718096;font-size:0.78rem;text-transform:uppercase;">Délai restant</th>
+                  <th style="padding:0.5rem 0.75rem;text-align:left;color:#718096;font-size:0.78rem;text-transform:uppercase;">SLA utilisé</th>
+                </tr></thead>
+                <tbody>${lignes}</tbody>
+              </table>
+              <p style="text-align:center;margin-top:1rem;">
+                <a href="${baseUrl}/demandes" style="display:inline-block;padding:0.7rem 1.5rem;background:#b7791f;color:white;text-decoration:none;border-radius:6px;font-weight:600;">Accéder aux demandes →</a>
+              </p>
+              <p style="color:#718096;font-size:0.8rem;margin-top:1rem;">CRRAE-UMOA — CRM Service Client · Alerte automatique</p>
+            </div>
+          </div>`,
+      });
+    } catch (e: any) { console.error('[BREVO] approche délai error', e?.message); }
+  }
+
+  async envoyerRelanceAgent(params: {
+    toEmail: string; toNom: string;
+    dossiers: { numDemande: string; nomPrenom: string; objetDemande: string; statut: string; service: string; dateReception: string; joursInactif: number }[];
+    baseUrl: string;
+  }) {
+    const { toEmail, toNom, dossiers, baseUrl } = params;
+    if (this.isDisabled()) { console.log('[EMAIL] désactivé — relance non envoyée'); return; }
+    const lignes = dossiers.map(d => `
+      <tr style="border-bottom:1px solid #e2e8f0;">
+        <td style="padding:0.5rem 0.75rem;font-weight:600;color:#2b6cb0;">${d.numDemande}</td>
+        <td style="padding:0.5rem 0.75rem;">${d.nomPrenom}</td>
+        <td style="padding:0.5rem 0.75rem;font-size:0.85rem;">${d.objetDemande}</td>
+        <td style="padding:0.5rem 0.75rem;">${d.service}</td>
+        <td style="padding:0.5rem 0.75rem;">${d.dateReception}</td>
+        <td style="padding:0.5rem 0.75rem;"><span style="background:#ebf8ff;color:#2b6cb0;padding:2px 8px;border-radius:20px;font-size:0.8rem;">${d.statut}</span></td>
+        <td style="padding:0.5rem 0.75rem;color:#6b46c1;font-weight:700;">${d.joursInactif}j sans mise à jour</td>
+      </tr>`).join('');
+    try {
+      await this.getApi().sendTransacEmail({
+        sender: { email: process.env.EMAIL_FROM, name: 'CRRAE-UMOA CRM' },
+        to: [{ email: toEmail, name: toNom }],
+        subject: `🔔 Relance — ${dossiers.length} demande(s) en attente de traitement`,
+        htmlContent: `
+          <div style="font-family:Arial,sans-serif;color:#1f2937;max-width:700px;">
+            <div style="background:#2b6cb0;padding:1rem 1.5rem;border-radius:8px 8px 0 0;">
+              <h2 style="color:white;margin:0;font-size:1.1rem;">🔔 Relance — Demandes en attente de votre action</h2>
+            </div>
+            <div style="border:1px solid #e2e8f0;border-top:none;padding:1.25rem 1.5rem;border-radius:0 0 8px 8px;background:#ebf8ff;">
+              <p>Bonjour <strong>${toNom}</strong>,</p>
+              <p>Les demandes suivantes n'ont pas été mises à jour depuis plus de 2 jours et nécessitent votre intervention :</p>
+              <table style="width:100%;border-collapse:collapse;font-size:0.88rem;background:white;border-radius:8px;overflow:hidden;margin:1rem 0;">
+                <thead><tr style="background:#f8fafc;">
+                  <th style="padding:0.5rem 0.75rem;text-align:left;color:#718096;font-size:0.78rem;text-transform:uppercase;">N°</th>
+                  <th style="padding:0.5rem 0.75rem;text-align:left;color:#718096;font-size:0.78rem;text-transform:uppercase;">Client</th>
+                  <th style="padding:0.5rem 0.75rem;text-align:left;color:#718096;font-size:0.78rem;text-transform:uppercase;">Objet</th>
+                  <th style="padding:0.5rem 0.75rem;text-align:left;color:#718096;font-size:0.78rem;text-transform:uppercase;">Service</th>
+                  <th style="padding:0.5rem 0.75rem;text-align:left;color:#718096;font-size:0.78rem;text-transform:uppercase;">Réception</th>
+                  <th style="padding:0.5rem 0.75rem;text-align:left;color:#718096;font-size:0.78rem;text-transform:uppercase;">Statut</th>
+                  <th style="padding:0.5rem 0.75rem;text-align:left;color:#718096;font-size:0.78rem;text-transform:uppercase;">Inactivité</th>
+                </tr></thead>
+                <tbody>${lignes}</tbody>
+              </table>
+              <p style="text-align:center;margin-top:1rem;">
+                <a href="${baseUrl}/demandes" style="display:inline-block;padding:0.7rem 1.5rem;background:#2b6cb0;color:white;text-decoration:none;border-radius:6px;font-weight:600;">Accéder aux demandes →</a>
+              </p>
+              <p style="color:#718096;font-size:0.8rem;margin-top:1rem;">CRRAE-UMOA — CRM Service Client · Relance automatique</p>
+            </div>
+          </div>`,
+      });
+    } catch (e: any) { console.error('[BREVO] relance agent error', e?.message); }
+  }
+
   async envoyerResetPassword(email: string, nom: string, lien: string) {
     await this.getApi().sendTransacEmail({
       sender: { email: process.env.EMAIL_FROM, name: 'CRRAE-UMOA' },
