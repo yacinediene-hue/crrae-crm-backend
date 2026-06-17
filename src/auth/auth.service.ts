@@ -31,24 +31,6 @@ export class AuthService {
 
     await this.auditService.log({ auteur: user.name, auteurId: user.id, role: user.role, action: 'LOGIN_SUCCESS', entite: 'Auth', ip });
 
-    // 2FA obligatoire pour les administrateurs
-    if (user.role === 'admin') {
-      const code = Math.floor(100000 + Math.random() * 900000).toString();
-      const expiresAt = new Date(Date.now() + 10 * 60 * 1000);
-
-      await this.prisma.otpCode.deleteMany({ where: { userId: user.id } });
-      await this.prisma.otpCode.create({ data: { userId: user.id, code, expiresAt } });
-      await this.emailService.envoyerOtp(user.email!, user.name, code);
-
-      await this.auditService.log({ auteur: user.name, auteurId: user.id, role: user.role, action: 'OTP_SENT', entite: 'Auth', ip });
-
-      const tempPayload = { sub: user.id, scope: 'otp_pending' };
-      return {
-        requiresOtp: true,
-        otpToken: this.jwtService.sign(tempPayload, { expiresIn: '10m' }),
-      };
-    }
-
     const payload = { sub: user.id, email: user.email, role: user.role };
     return {
       access_token: this.jwtService.sign(payload),
