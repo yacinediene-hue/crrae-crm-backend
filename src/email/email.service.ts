@@ -295,28 +295,31 @@ export class EmailService {
   }
 
   async envoyerOtp(toEmail: string, toNom: string, code: string) {
-    if (this.isDisabled()) { console.log('[EMAIL] OTP suspendu'); return; }
-    await this.getApi().sendTransacEmail({
-      sender: { email: process.env.EMAIL_FROM, name: 'CRRAE-UMOA CRM' },
-      to: [{ email: toEmail, name: toNom }],
-      subject: '🔐 Code de vérification — Connexion administrateur',
-      htmlContent: `
-        <div style="font-family:Arial,sans-serif;color:#1f2937;max-width:480px;margin:0 auto;">
-          <div style="background:#1a365d;padding:1.25rem 1.5rem;border-radius:8px 8px 0 0;text-align:center;">
-            <h2 style="color:white;margin:0;font-size:1.1rem;">🔐 Vérification en deux étapes</h2>
-          </div>
-          <div style="border:1px solid #e2e8f0;border-top:none;padding:2rem 1.5rem;border-radius:0 0 8px 8px;background:#f8fafc;text-align:center;">
-            <p style="margin:0 0 1.5rem;">Bonjour <strong>${toNom}</strong>,</p>
-            <p style="margin:0 0 1rem;color:#4a5568;">Voici votre code de connexion :</p>
-            <div style="background:white;border:2px solid #2b6cb0;border-radius:12px;padding:1.25rem 2rem;display:inline-block;margin:0 0 1.5rem;">
-              <span style="font-size:2.2rem;font-weight:800;letter-spacing:0.35em;color:#1a365d;">${code}</span>
+    console.log(`[OTP] Code 2FA pour ${toNom} <${toEmail}> : ${code}`);
+    if (this.isDisabled()) { console.log('[EMAIL] OTP suspendu — voir le code ci-dessus dans les logs'); return; }
+    try {
+      await this.getApi().sendTransacEmail({
+        sender: { email: process.env.EMAIL_FROM, name: 'CRRAE-UMOA CRM' },
+        to: [{ email: toEmail, name: toNom }],
+        subject: '🔐 Code de vérification — Connexion administrateur',
+        htmlContent: `
+          <div style="font-family:Arial,sans-serif;color:#1f2937;max-width:480px;margin:0 auto;">
+            <div style="background:#1a365d;padding:1.25rem 1.5rem;border-radius:8px 8px 0 0;text-align:center;">
+              <h2 style="color:white;margin:0;font-size:1.1rem;">🔐 Vérification en deux étapes</h2>
             </div>
-            <p style="color:#718096;font-size:0.85rem;margin:0 0 0.5rem;">Ce code est valable <strong>10 minutes</strong>.</p>
-            <p style="color:#c53030;font-size:0.82rem;">Si vous n'êtes pas à l'origine de cette connexion, changez immédiatement votre mot de passe.</p>
-          </div>
-          <p style="color:#a0aec0;font-size:0.78rem;text-align:center;margin-top:1rem;">CRRAE-UMOA — CRM Service Client</p>
-        </div>`,
-    });
+            <div style="border:1px solid #e2e8f0;border-top:none;padding:2rem 1.5rem;border-radius:0 0 8px 8px;background:#f8fafc;text-align:center;">
+              <p style="margin:0 0 1.5rem;">Bonjour <strong>${toNom}</strong>,</p>
+              <p style="margin:0 0 1rem;color:#4a5568;">Voici votre code de connexion :</p>
+              <div style="background:white;border:2px solid #2b6cb0;border-radius:12px;padding:1.25rem 2rem;display:inline-block;margin:0 0 1.5rem;">
+                <span style="font-size:2.2rem;font-weight:800;letter-spacing:0.35em;color:#1a365d;">${code}</span>
+              </div>
+              <p style="color:#718096;font-size:0.85rem;margin:0 0 0.5rem;">Ce code est valable <strong>10 minutes</strong>.</p>
+              <p style="color:#c53030;font-size:0.82rem;">Si vous n'êtes pas à l'origine de cette connexion, changez immédiatement votre mot de passe.</p>
+            </div>
+            <p style="color:#a0aec0;font-size:0.78rem;text-align:center;margin-top:1rem;">CRRAE-UMOA — CRM Service Client</p>
+          </div>`,
+      });
+    } catch (e: any) { console.error('[BREVO] OTP email error', e?.message); }
   }
 
   async envoyerRapportSauvegarde(params: {
