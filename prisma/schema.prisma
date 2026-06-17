@@ -263,9 +263,20 @@ model AuditLog {
   id        String   @id @default(cuid())
   auteur    String
   auteurId  String?
+  role      String?
   action    String
   entite    String
   entiteId  String?
   detail    String?
+  ip        String?
+  createdAt DateTime @default(now())
+}
+
+model OtpCode {
+  id        String   @id @default(cuid())
+  userId    String
+  code      String
+  expiresAt DateTime
+  used      Boolean  @default(false)
   createdAt DateTime @default(now())
 }

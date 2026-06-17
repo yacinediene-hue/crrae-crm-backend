@@ -5,3 +5,4 @@ dist
 .env.*.local
 .wwebjs_auth/
 .wwebjs_cache/
+.vercel

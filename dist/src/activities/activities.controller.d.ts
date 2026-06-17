@@ -5,7 +5,7 @@ export declare class ActivitiesController {
     findAll(query: any): import(".prisma/client").Prisma.PrismaPromise<({
         contact: {
             id: string;
-            email: string;
+            email: string | null;
             name: string;
             createdAt: Date;
             phone: string | null;
@@ -29,7 +29,7 @@ export declare class ActivitiesController {
     findOne(id: string): Promise<{
         contact: {
             id: string;
-            email: string;
+            email: string | null;
             name: string;
             createdAt: Date;
             phone: string | null;
@@ -53,7 +53,7 @@ export declare class ActivitiesController {
     create(body: any): import(".prisma/client").Prisma.Prisma__ActivityClient<{
         contact: {
             id: string;
-            email: string;
+            email: string | null;
             name: string;
             createdAt: Date;
             phone: string | null;
@@ -77,7 +77,7 @@ export declare class ActivitiesController {
     update(id: string, body: any): Promise<{
         contact: {
             id: string;
-            email: string;
+            email: string | null;
             name: string;
             createdAt: Date;
             phone: string | null;

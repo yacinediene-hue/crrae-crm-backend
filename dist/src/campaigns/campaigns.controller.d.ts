@@ -17,7 +17,7 @@ export declare class CampaignsController {
     }[]>;
     getTargets(id: string): Promise<{
         id: string;
-        email: string;
+        email: string | null;
         name: string;
         createdAt: Date;
         phone: string | null;

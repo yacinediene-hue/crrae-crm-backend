@@ -5,10 +5,14 @@ import { AuthService } from './auth.service';
 import { AuthController } from './auth.controller';
 import { JwtStrategy } from './jwt.strategy';
 import { EmailService } from '../email/email.service';
+import { AuditModule } from '../audit/audit.module';
+import { PrismaModule } from '../prisma/prisma.module';
 
 @Module({
   imports: [
     PassportModule,
+    PrismaModule,
+    AuditModule,
     JwtModule.register({
       secret: process.env.JWT_SECRET || 'crrae-umoa-secret-2026',
       signOptions: { expiresIn: '24h' },

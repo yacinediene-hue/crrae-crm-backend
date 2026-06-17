@@ -5,7 +5,7 @@ export declare class SurveysController {
     findAll(query: any): import(".prisma/client").Prisma.PrismaPromise<({
         contact: {
             id: string;
-            email: string;
+            email: string | null;
             name: string;
             createdAt: Date;
             phone: string | null;
@@ -42,7 +42,7 @@ export declare class SurveysController {
     findOne(id: string): Promise<{
         contact: {
             id: string;
-            email: string;
+            email: string | null;
             name: string;
             createdAt: Date;
             phone: string | null;
@@ -79,7 +79,7 @@ export declare class SurveysController {
     create(body: any): import(".prisma/client").Prisma.Prisma__SurveyClient<{
         contact: {
             id: string;
-            email: string;
+            email: string | null;
             name: string;
             createdAt: Date;
             phone: string | null;
@@ -116,7 +116,7 @@ export declare class SurveysController {
     update(id: string, body: any): Promise<{
         contact: {
             id: string;
-            email: string;
+            email: string | null;
             name: string;
             createdAt: Date;
             phone: string | null;

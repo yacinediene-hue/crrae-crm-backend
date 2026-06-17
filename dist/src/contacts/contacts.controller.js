@@ -32,6 +32,11 @@ let ContactsController = class ContactsController {
         this.audit.log({ auteur: req.user.email, auteurId: req.user.id, action: 'IMPORT_CONTACTS', entite: 'Contact', detail: `Import: ${result.imported} créés, ${result.duplicates} doublons, ${result.errors} erreurs sur ${result.total} lignes` });
         return result;
     }
+    async syncFromDemandes(req) {
+        const result = await this.service.syncFromDemandes();
+        this.audit.log({ auteur: req.user.email, auteurId: req.user.id, action: 'SYNC_CONTACTS_FROM_DEMANDES', entite: 'Contact', detail: `${result.crees} créés, ${result.mises_a_jour} mis à jour, ${result.ignores} ignorés` });
+        return result;
+    }
     update(id, body) { return this.service.update(id, body); }
     async remove(id, req) {
         const result = await this.service.remove(id);
@@ -70,6 +75,14 @@ __decorate([
     __metadata("design:paramtypes", [Array, Object]),
     __metadata("design:returntype", Promise)
 ], ContactsController.prototype, "importContacts", null);
+__decorate([
+    (0, common_1.Post)('sync-from-demandes'),
+    (0, roles_decorator_1.Roles)('admin', 'manager'),
+    __param(0, (0, common_1.Request)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object]),
+    __metadata("design:returntype", Promise)
+], ContactsController.prototype, "syncFromDemandes", null);
 __decorate([
     (0, common_1.Put)(':id'),
     __param(0, (0, common_1.Param)('id')),

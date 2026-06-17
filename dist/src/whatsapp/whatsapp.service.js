@@ -44,7 +44,7 @@ let WhatsappService = class WhatsappService {
                         numDemande,
                         nomPrenom: nom,
                         telephone,
-                        canal: 'WhatsApp',
+                        canal: 'WHATSAPP',
                         objetDemande: 'Information',
                         commentaire: msg.body,
                         statut: 'En cours',
@@ -57,7 +57,7 @@ let WhatsappService = class WhatsappService {
                         demandeId: demande.id,
                         auteur: 'WhatsApp',
                         action: 'Message entrant',
-                        canal: 'WhatsApp',
+                        canal: 'WHATSAPP',
                         detail: msg.body,
                     }
                 });

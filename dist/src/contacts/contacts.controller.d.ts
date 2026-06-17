@@ -4,21 +4,7 @@ export declare class ContactsController {
     private service;
     private audit;
     constructor(service: ContactsService, audit: AuditService);
-    findAll(query: any): import(".prisma/client").Prisma.PrismaPromise<{
-        id: string;
-        email: string;
-        name: string;
-        createdAt: Date;
-        phone: string | null;
-        company: string | null;
-        profilClient: string | null;
-        status: string;
-        value: number;
-        lastContact: Date | null;
-        tags: string[];
-        notes: string | null;
-        assignedTo: string | null;
-    }[]>;
+    findAll(query: any): Promise<unknown>;
     findOne(id: string): Promise<{
         activities: {
             id: string;
@@ -42,7 +28,9 @@ export declare class ContactsController {
             id: string;
             email: string | null;
             createdAt: Date;
-            nomPrenom: string;
+            contactId: string | null;
+            title: string;
+            nomPrenom: string | null;
             institution: string | null;
             pays: string | null;
             telephone: string | null;
@@ -59,17 +47,16 @@ export declare class ContactsController {
             dateValidation: Date | null;
             dateActivation: Date | null;
             commentaire: string | null;
-            updatedAt: Date;
-            contactId: string | null;
+            updatedAt: Date | null;
         }[];
         events: {
             id: string;
             createdAt: Date;
             contactId: string;
+            title: string;
             type: string;
             date: Date;
             note: string | null;
-            title: string;
             time: string | null;
             done: boolean;
         }[];
@@ -97,7 +84,7 @@ export declare class ContactsController {
         })[];
     } & {
         id: string;
-        email: string;
+        email: string | null;
         name: string;
         createdAt: Date;
         phone: string | null;
@@ -112,7 +99,7 @@ export declare class ContactsController {
     }>;
     create(body: any): import(".prisma/client").Prisma.Prisma__ContactClient<{
         id: string;
-        email: string;
+        email: string | null;
         name: string;
         createdAt: Date;
         phone: string | null;
@@ -136,9 +123,16 @@ export declare class ContactsController {
         errorRows: any[];
         contacts: any[];
     }>;
+    syncFromDemandes(req: any): Promise<{
+        crees: number;
+        mises_a_jour: number;
+        ignores: number;
+        total: number;
+        premiereErreur: string[];
+    }>;
     update(id: string, body: any): Promise<{
         id: string;
-        email: string;
+        email: string | null;
         name: string;
         createdAt: Date;
         phone: string | null;
@@ -153,7 +147,7 @@ export declare class ContactsController {
     }>;
     remove(id: string, req: any): Promise<{
         id: string;
-        email: string;
+        email: string | null;
         name: string;
         createdAt: Date;
         phone: string | null;

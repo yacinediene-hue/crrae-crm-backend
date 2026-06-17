@@ -69,7 +69,7 @@ export declare class CampaignsService {
     }>;
     getTargets(campaignId: string): Promise<{
         id: string;
-        email: string;
+        email: string | null;
         name: string;
         createdAt: Date;
         phone: string | null;

@@ -1,6 +1,4 @@
 import { Module } from '@nestjs/common';
-import { APP_GUARD } from '@nestjs/core';
-import { RolesGuard } from './auth/roles.guard';
 import { PrismaModule } from './prisma/prisma.module';
 import { AuthModule } from './auth/auth.module';
 import { ContactsModule } from './contacts/contacts.module';
@@ -18,6 +16,8 @@ import { CommentairesModule } from './commentaires/commentaires.module';
 import { DocumentsModule } from './documents/documents.module';
 import { AlertesModule } from './alertes/alertes.module';
 import { StoryModule } from './story/story.module';
+import { CryptoModule } from './crypto/crypto.module';
+import { BackupModule } from './backup/backup.module';
 import { ScheduleModule } from '@nestjs/schedule';
 
 @Module({
@@ -40,6 +40,8 @@ import { ScheduleModule } from '@nestjs/schedule';
     ScheduleModule.forRoot(),
     AlertesModule,
     StoryModule,
+    CryptoModule,
+    BackupModule,
   ],
 })
 export class AppModule {}

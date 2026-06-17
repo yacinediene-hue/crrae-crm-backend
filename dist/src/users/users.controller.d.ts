@@ -42,7 +42,7 @@ export declare class UsersController {
     }>;
     remove(id: string, req: any): Promise<{
         id: string;
-        email: string;
+        email: string | null;
         name: string;
         role: string;
         avatar: string | null;

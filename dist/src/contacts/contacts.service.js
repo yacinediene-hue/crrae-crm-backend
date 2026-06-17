@@ -31,7 +31,19 @@ let ContactsService = class ContactsService {
                 { company: { contains: query.search, mode: 'insensitive' } },
             ];
         }
-        return this.prisma.contact.findMany({ where, orderBy: { createdAt: 'desc' } });
+        return this.prisma.contact.findMany({
+            where,
+            orderBy: { createdAt: 'desc' },
+            select: {
+                id: true, name: true, email: true, phone: true, company: true,
+                status: true, value: true, lastContact: true, tags: true,
+                notes: true, createdAt: true, assignedTo: true, profilClient: true,
+            },
+        }).catch(() => this.prisma.$queryRaw `
+        SELECT id, name, email, phone, company, status, value,
+               "lastContact", tags, notes, "createdAt", "assignedTo"
+        FROM "Contact" ORDER BY "createdAt" DESC
+      `);
     }
     async findOne(id) {
         const contact = await this.prisma.contact.findUnique({
@@ -106,6 +118,74 @@ let ContactsService = class ContactsService {
             errorRows: errors,
             contacts: created,
         };
+    }
+    async syncFromDemandes() {
+        const n = (v) => {
+            const s = String(v || '').trim();
+            return s.length > 0 ? s : null;
+        };
+        const rows = await this.prisma.$queryRaw `
+      SELECT "nomPrenom", telephone, email, "typeClient"
+      FROM "Demande"
+      WHERE (telephone IS NOT NULL AND trim(telephone) != '')
+         OR (email    IS NOT NULL AND trim(email)    != '')
+    `;
+        const seen = new Map();
+        for (const d of rows) {
+            const email = n(d.email)?.toLowerCase() || null;
+            const tel = n(d.telephone);
+            const key = email || (tel ? `tel_${tel}` : null);
+            if (!key || seen.has(key))
+                continue;
+            seen.set(key, {
+                name: n(d.nomPrenom) || 'Non renseigné',
+                email,
+                telephone: tel,
+                typeClient: n(d.typeClient),
+            });
+        }
+        console.log(`[sync] ${rows.length} demandes lues, ${seen.size} contacts uniques à traiter`);
+        let crees = 0, mises_a_jour = 0, ignores = 0;
+        const premiereErreur = [];
+        for (const [key, d] of seen) {
+            try {
+                let existing = [];
+                if (d.email) {
+                    existing = await this.prisma.$queryRaw `
+            SELECT id, phone FROM "Contact" WHERE email = ${d.email} LIMIT 1
+          `;
+                }
+                if (existing.length === 0 && d.telephone) {
+                    existing = await this.prisma.$queryRaw `
+            SELECT id, phone FROM "Contact" WHERE phone = ${d.telephone} LIMIT 1
+          `;
+                }
+                if (existing.length > 0) {
+                    await this.prisma.$executeRawUnsafe(`UPDATE "Contact"
+             SET name          = $1,
+                 email         = COALESCE(email, $2),
+                 phone         = COALESCE(phone, $3),
+                 "profilClient" = COALESCE("profilClient", $4)
+             WHERE id = $5`, d.name, d.email, d.telephone, d.typeClient, existing[0].id);
+                    mises_a_jour++;
+                }
+                else {
+                    await this.prisma.$executeRawUnsafe(`INSERT INTO "Contact" (id, name, email, phone, "profilClient", status, value, tags, "createdAt")
+             VALUES (gen_random_uuid()::text, $1, $2, $3, $4, 'client', 0, '{}', NOW())
+             ON CONFLICT (email) DO NOTHING`, d.name, d.email, d.telephone, d.typeClient);
+                    crees++;
+                }
+            }
+            catch (e) {
+                const msg = e?.message || 'Erreur inconnue';
+                console.error('[sync] erreur contact', key, msg);
+                if (premiereErreur.length < 3)
+                    premiereErreur.push(`${key}: ${msg}`);
+                ignores++;
+            }
+        }
+        console.log(`[sync] terminé — créés: ${crees}, màj: ${mises_a_jour}, ignorés: ${ignores}`);
+        return { crees, mises_a_jour, ignores, total: seen.size, premiereErreur };
     }
     async update(id, data) {
         await this.findOne(id);

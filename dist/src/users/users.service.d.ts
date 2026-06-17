@@ -40,7 +40,7 @@ export declare class UsersService {
     }>;
     remove(id: string): Promise<{
         id: string;
-        email: string;
+        email: string | null;
         name: string;
         role: string;
         avatar: string | null;

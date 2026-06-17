@@ -23,14 +23,14 @@ export declare class EnquetesController {
         service: string | null;
         commentaire: string | null;
         updatedAt: Date;
-        canal: string | null;
+        canal: import(".prisma/client").$Enums.CanalDemande | null;
         statut: string;
         numDemande: string | null;
+        agentN1: string | null;
         matricule: string | null;
         adherent: string | null;
         heureAppel: string | null;
         objetDemande: string | null;
-        agentN1: string | null;
         agentN2: string | null;
         dateReception: Date | null;
         dateTraitement: Date | null;
@@ -40,7 +40,11 @@ export declare class EnquetesController {
         respectDelai: string | null;
         canalCommunication: string | null;
         enqueteEnvoyee: boolean;
+        dateEnvoiEnquete: Date | null;
         noteSatisfaction: number | null;
+        niveauTraitement: number;
+        dateEscalade: Date | null;
+        commentaireEscalade: string | null;
     } | {
         error: string;
     }>;

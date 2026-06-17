@@ -8,7 +8,9 @@ export declare class DealsController {
         id: string;
         email: string | null;
         createdAt: Date;
-        nomPrenom: string;
+        contactId: string | null;
+        title: string;
+        nomPrenom: string | null;
         institution: string | null;
         pays: string | null;
         telephone: string | null;
@@ -25,14 +27,15 @@ export declare class DealsController {
         dateValidation: Date | null;
         dateActivation: Date | null;
         commentaire: string | null;
-        updatedAt: Date;
-        contactId: string | null;
+        updatedAt: Date | null;
     }[]>;
     findOne(id: string): Promise<{
         id: string;
         email: string | null;
         createdAt: Date;
-        nomPrenom: string;
+        contactId: string | null;
+        title: string;
+        nomPrenom: string | null;
         institution: string | null;
         pays: string | null;
         telephone: string | null;
@@ -49,14 +52,15 @@ export declare class DealsController {
         dateValidation: Date | null;
         dateActivation: Date | null;
         commentaire: string | null;
-        updatedAt: Date;
-        contactId: string | null;
+        updatedAt: Date | null;
     }>;
-    create(body: any): import(".prisma/client").Prisma.Prisma__DealClient<{
+    create(body: any): Promise<{
         id: string;
         email: string | null;
         createdAt: Date;
-        nomPrenom: string;
+        contactId: string | null;
+        title: string;
+        nomPrenom: string | null;
         institution: string | null;
         pays: string | null;
         telephone: string | null;
@@ -73,14 +77,15 @@ export declare class DealsController {
         dateValidation: Date | null;
         dateActivation: Date | null;
         commentaire: string | null;
-        updatedAt: Date;
-        contactId: string | null;
-    }, never, import("@prisma/client/runtime/library").DefaultArgs>;
+        updatedAt: Date | null;
+    }>;
     update(id: string, body: any): Promise<{
         id: string;
         email: string | null;
         createdAt: Date;
-        nomPrenom: string;
+        contactId: string | null;
+        title: string;
+        nomPrenom: string | null;
         institution: string | null;
         pays: string | null;
         telephone: string | null;
@@ -97,14 +102,15 @@ export declare class DealsController {
         dateValidation: Date | null;
         dateActivation: Date | null;
         commentaire: string | null;
-        updatedAt: Date;
-        contactId: string | null;
+        updatedAt: Date | null;
     }>;
     remove(id: string, req: any): Promise<{
         id: string;
         email: string | null;
         createdAt: Date;
-        nomPrenom: string;
+        contactId: string | null;
+        title: string;
+        nomPrenom: string | null;
         institution: string | null;
         pays: string | null;
         telephone: string | null;
@@ -121,7 +127,6 @@ export declare class DealsController {
         dateValidation: Date | null;
         dateActivation: Date | null;
         commentaire: string | null;
-        updatedAt: Date;
-        contactId: string | null;
+        updatedAt: Date | null;
     }>;
 }

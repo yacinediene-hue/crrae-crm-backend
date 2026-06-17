@@ -5,7 +5,7 @@ export declare class EventsService {
     findAll(query?: any): import(".prisma/client").Prisma.PrismaPromise<({
         contact: {
             id: string;
-            email: string;
+            email: string | null;
             name: string;
             createdAt: Date;
             phone: string | null;
@@ -22,17 +22,17 @@ export declare class EventsService {
         id: string;
         createdAt: Date;
         contactId: string;
+        title: string;
         type: string;
         date: Date;
         note: string | null;
-        title: string;
         time: string | null;
         done: boolean;
     })[]>;
     findOne(id: string): Promise<{
         contact: {
             id: string;
-            email: string;
+            email: string | null;
             name: string;
             createdAt: Date;
             phone: string | null;
@@ -49,17 +49,17 @@ export declare class EventsService {
         id: string;
         createdAt: Date;
         contactId: string;
+        title: string;
         type: string;
         date: Date;
         note: string | null;
-        title: string;
         time: string | null;
         done: boolean;
     }>;
     create(data: any): import(".prisma/client").Prisma.Prisma__EventClient<{
         contact: {
             id: string;
-            email: string;
+            email: string | null;
             name: string;
             createdAt: Date;
             phone: string | null;
@@ -76,17 +76,17 @@ export declare class EventsService {
         id: string;
         createdAt: Date;
         contactId: string;
+        title: string;
         type: string;
         date: Date;
         note: string | null;
-        title: string;
         time: string | null;
         done: boolean;
     }, never, import("@prisma/client/runtime/library").DefaultArgs>;
     update(id: string, data: any): Promise<{
         contact: {
             id: string;
-            email: string;
+            email: string | null;
             name: string;
             createdAt: Date;
             phone: string | null;
@@ -103,10 +103,10 @@ export declare class EventsService {
         id: string;
         createdAt: Date;
         contactId: string;
+        title: string;
         type: string;
         date: Date;
         note: string | null;
-        title: string;
         time: string | null;
         done: boolean;
     }>;
@@ -114,10 +114,10 @@ export declare class EventsService {
         id: string;
         createdAt: Date;
         contactId: string;
+        title: string;
         type: string;
         date: Date;
         note: string | null;
-        title: string;
         time: string | null;
         done: boolean;
     }>;

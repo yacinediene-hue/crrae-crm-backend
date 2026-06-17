@@ -5,7 +5,7 @@ export declare class ContractsService {
     findAll(query?: any): import(".prisma/client").Prisma.PrismaPromise<({
         contact: {
             id: string;
-            email: string;
+            email: string | null;
             name: string;
             createdAt: Date;
             phone: string | null;
@@ -31,7 +31,7 @@ export declare class ContractsService {
     findOne(id: string): Promise<{
         contact: {
             id: string;
-            email: string;
+            email: string | null;
             name: string;
             createdAt: Date;
             phone: string | null;
@@ -57,7 +57,7 @@ export declare class ContractsService {
     create(data: any): import(".prisma/client").Prisma.Prisma__ContractClient<{
         contact: {
             id: string;
-            email: string;
+            email: string | null;
             name: string;
             createdAt: Date;
             phone: string | null;
@@ -83,7 +83,7 @@ export declare class ContractsService {
     update(id: string, data: any): Promise<{
         contact: {
             id: string;
-            email: string;
+            email: string | null;
             name: string;
             createdAt: Date;
             phone: string | null;

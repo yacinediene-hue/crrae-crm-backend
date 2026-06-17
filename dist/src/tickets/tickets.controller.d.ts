@@ -5,7 +5,7 @@ export declare class TicketsController {
     findAll(query: any): import(".prisma/client").Prisma.PrismaPromise<({
         contact: {
             id: string;
-            email: string;
+            email: string | null;
             name: string;
             createdAt: Date;
             phone: string | null;
@@ -42,7 +42,7 @@ export declare class TicketsController {
         }[];
         contact: {
             id: string;
-            email: string;
+            email: string | null;
             name: string;
             createdAt: Date;
             phone: string | null;
@@ -69,7 +69,7 @@ export declare class TicketsController {
     create(body: any): import(".prisma/client").Prisma.Prisma__TicketClient<{
         contact: {
             id: string;
-            email: string;
+            email: string | null;
             name: string;
             createdAt: Date;
             phone: string | null;
@@ -96,7 +96,7 @@ export declare class TicketsController {
     update(id: string, body: any): Promise<{
         contact: {
             id: string;
-            email: string;
+            email: string | null;
             name: string;
             createdAt: Date;
             phone: string | null;

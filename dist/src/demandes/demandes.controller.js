@@ -24,10 +24,23 @@ let DemandesController = class DemandesController {
         this.service = service;
         this.audit = audit;
     }
+    getAgentsN2() { return demandes_service_1.AGENTS_N2; }
     findAll(query) { return this.service.findAll(query); }
     findOne(id) { return this.service.findOne(id); }
     create(body) { return this.service.create(body); }
     update(id, body) { return this.service.update(id, body); }
+    sendSurvey(id, req) {
+        return this.service.sendSurvey(id, req.user);
+    }
+    escalader(id, body, req) {
+        return this.service.escalader(id, body, req.user);
+    }
+    prendreEnCharge(id, req) {
+        return this.service.prendreEnCharge(id, req.user);
+    }
+    renvoyerN1(id, body, req) {
+        return this.service.renvoyerN1(id, body, req.user);
+    }
     async remove(id, req) {
         const result = await this.service.remove(id);
         this.audit.log({ auteur: req.user.email, auteurId: req.user.id, action: 'DELETE_DEMANDE', entite: 'Demande', entiteId: id });
@@ -35,6 +48,12 @@ let DemandesController = class DemandesController {
     }
 };
 exports.DemandesController = DemandesController;
+__decorate([
+    (0, common_1.Get)('agents-n2'),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", []),
+    __metadata("design:returntype", void 0)
+], DemandesController.prototype, "getAgentsN2", null);
 __decorate([
     (0, common_1.Get)(),
     __param(0, (0, common_1.Query)()),
@@ -64,6 +83,40 @@ __decorate([
     __metadata("design:paramtypes", [String, Object]),
     __metadata("design:returntype", void 0)
 ], DemandesController.prototype, "update", null);
+__decorate([
+    (0, common_1.Post)(':id/send-survey'),
+    __param(0, (0, common_1.Param)('id')),
+    __param(1, (0, common_1.Request)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [String, Object]),
+    __metadata("design:returntype", void 0)
+], DemandesController.prototype, "sendSurvey", null);
+__decorate([
+    (0, common_1.Post)(':id/escalader'),
+    __param(0, (0, common_1.Param)('id')),
+    __param(1, (0, common_1.Body)()),
+    __param(2, (0, common_1.Request)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [String, Object, Object]),
+    __metadata("design:returntype", void 0)
+], DemandesController.prototype, "escalader", null);
+__decorate([
+    (0, common_1.Post)(':id/prendre-en-charge'),
+    __param(0, (0, common_1.Param)('id')),
+    __param(1, (0, common_1.Request)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [String, Object]),
+    __metadata("design:returntype", void 0)
+], DemandesController.prototype, "prendreEnCharge", null);
+__decorate([
+    (0, common_1.Post)(':id/renvoyer-n1'),
+    __param(0, (0, common_1.Param)('id')),
+    __param(1, (0, common_1.Body)()),
+    __param(2, (0, common_1.Request)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [String, Object, Object]),
+    __metadata("design:returntype", void 0)
+], DemandesController.prototype, "renvoyerN1", null);
 __decorate([
     (0, common_1.Delete)(':id'),
     (0, roles_decorator_1.Roles)('admin', 'manager'),

@@ -22,6 +22,10 @@ const workflows_module_1 = require("./workflows/workflows.module");
 const users_module_1 = require("./users/users.module");
 const demandes_module_1 = require("./demandes/demandes.module");
 const commentaires_module_1 = require("./commentaires/commentaires.module");
+const documents_module_1 = require("./documents/documents.module");
+const alertes_module_1 = require("./alertes/alertes.module");
+const story_module_1 = require("./story/story.module");
+const schedule_1 = require("@nestjs/schedule");
 let AppModule = class AppModule {
 };
 exports.AppModule = AppModule;
@@ -42,6 +46,10 @@ exports.AppModule = AppModule = __decorate([
             users_module_1.UsersModule,
             demandes_module_1.DemandesModule,
             commentaires_module_1.CommentairesModule,
+            documents_module_1.DocumentsModule,
+            schedule_1.ScheduleModule.forRoot(),
+            alertes_module_1.AlertesModule,
+            story_module_1.StoryModule,
         ],
     })
 ], AppModule);
