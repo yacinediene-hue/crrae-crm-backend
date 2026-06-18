@@ -53,4 +53,10 @@ export class ContactsController {
     this.audit.log({ auteur: req.user.email, auteurId: req.user.id, action: 'UPDATE', entite: 'Contact', detail: `Migration KAMAGATE Fatoumata : ${result.total} enregistrement(s) mis à jour` });
     return result;
   }
+
+  @Get('admin/search-kamagate')
+  @Roles('admin')
+  async searchKamagate() {
+    return this.service.searchKamagate();
+  }
 }

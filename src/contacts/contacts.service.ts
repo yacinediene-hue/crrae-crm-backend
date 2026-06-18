@@ -214,6 +214,15 @@ export class ContactsService {
     return this.prisma.contact.delete({ where: { id } });
   }
 
+  async searchKamagate() {
+    const [contacts, demandes, deals] = await Promise.all([
+      this.prisma.contact.findMany({ where: { name: { contains: 'kamagate', mode: 'insensitive' } }, select: { id: true, name: true } }),
+      this.prisma.demande.findMany({ where: { nomPrenom: { contains: 'kamagate', mode: 'insensitive' } }, select: { id: true, numDemande: true, nomPrenom: true } }),
+      this.prisma.deal.findMany({ where: { nomPrenom: { contains: 'kamagate', mode: 'insensitive' } }, select: { id: true, nomPrenom: true } }),
+    ]);
+    return { contacts, demandes, deals };
+  }
+
   async migrerNomKamagate() {
     const patterns = ['Fatou KAMAGATE', 'KAMAGATE Fatou'];
     const cible = 'KAMAGATE Fatoumata';
