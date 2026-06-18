@@ -45,4 +45,12 @@ export class ContactsController {
     this.audit.log({ auteur: req.user.email, auteurId: req.user.id, action: 'DELETE_CONTACT', entite: 'Contact', entiteId: id });
     return result;
   }
+
+  @Post('admin/migrate-kamagate')
+  @Roles('admin')
+  async migrerNomKamagate(@Request() req: any) {
+    const result = await this.service.migrerNomKamagate();
+    this.audit.log({ auteur: req.user.email, auteurId: req.user.id, action: 'UPDATE', entite: 'Contact', detail: `Migration KAMAGATE Fatoumata : ${result.total} enregistrement(s) mis à jour` });
+    return result;
+  }
 }

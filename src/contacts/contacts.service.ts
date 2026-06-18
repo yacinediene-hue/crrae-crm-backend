@@ -213,4 +213,21 @@ export class ContactsService {
     await this.findOne(id);
     return this.prisma.contact.delete({ where: { id } });
   }
+
+  async migrerNomKamagate() {
+    const patterns = ['Fatou KAMAGATE', 'KAMAGATE Fatou'];
+    const cible = 'KAMAGATE Fatoumata';
+    const rapport: any[] = [];
+
+    for (const pattern of patterns) {
+      const opts = { where: { name: { equals: pattern, mode: 'insensitive' as const } }, data: { name: cible } };
+      const c = await this.prisma.contact.updateMany(opts);
+      const d = await this.prisma.demande.updateMany({ where: { nomPrenom: { equals: pattern, mode: 'insensitive' } }, data: { nomPrenom: cible } });
+      const deal = await this.prisma.deal.updateMany({ where: { nomPrenom: { equals: pattern, mode: 'insensitive' } }, data: { nomPrenom: cible } });
+      rapport.push({ source: pattern, contacts: c.count, demandes: d.count, deals: deal.count });
+    }
+
+    const total = rapport.reduce((s, r) => s + r.contacts + r.demandes + r.deals, 0);
+    return { cible, rapport, total };
+  }
 }
