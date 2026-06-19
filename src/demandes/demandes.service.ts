@@ -78,7 +78,7 @@ export class DemandesService {
     return item;
   }
 
-  private static readonly VALID_CANAUX = ['EMAIL','TELEPHONE','WHATSAPP','SITE_WEB','GUICHET','LINKEDIN','FACEBOOK','AUTRE'];
+  private static readonly VALID_CANAUX = ['EMAIL','TELEPHONE','WHATSAPP','SITE_WEB','GUICHET','PHYSIQUE','LINKEDIN','FACEBOOK','AUTRE'];
 
   private sanitize(data: any): any {
     const excluded = ['profilClient', 'niveauTraitement', 'dateEscalade', 'commentaireEscalade', 'skipEmail'];

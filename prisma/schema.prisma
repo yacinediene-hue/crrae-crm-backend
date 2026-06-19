@@ -13,6 +13,7 @@ enum CanalDemande {
   WHATSAPP
   SITE_WEB
   GUICHET
+  PHYSIQUE
   LINKEDIN
   FACEBOOK
   AUTRE

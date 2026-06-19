@@ -1,0 +1,2 @@
+-- AlterEnum
+ALTER TYPE "CanalDemande" ADD VALUE 'PHYSIQUE' AFTER 'GUICHET';
