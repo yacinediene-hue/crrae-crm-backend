@@ -1,3 +1,4 @@
+import { Request } from 'express';
 import { AuthService } from './auth.service';
 export declare class AuthController {
     private authService;
@@ -5,7 +6,20 @@ export declare class AuthController {
     login(body: {
         email: string;
         password: string;
-    }): Promise<{
+    }, req: Request): Promise<{
+        access_token: string;
+        user: {
+            id: string;
+            name: string;
+            email: string;
+            role: string;
+            avatar: string;
+        };
+    }>;
+    verifyOtp(body: {
+        otpToken: string;
+        code: string;
+    }, req: Request): Promise<{
         access_token: string;
         user: {
             id: string;

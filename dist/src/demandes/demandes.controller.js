@@ -41,6 +41,12 @@ let DemandesController = class DemandesController {
     renvoyerN1(id, body, req) {
         return this.service.renvoyerN1(id, body, req.user);
     }
+    demanderSuppression(id, req) {
+        return this.service.demanderSuppression(id, req.user);
+    }
+    annulerSuppression(id, req) {
+        return this.service.annulerSuppression(id, req.user);
+    }
     async remove(id, req) {
         const result = await this.service.remove(id);
         this.audit.log({ auteur: req.user.email, auteurId: req.user.id, action: 'DELETE_DEMANDE', entite: 'Demande', entiteId: id });
@@ -117,6 +123,23 @@ __decorate([
     __metadata("design:paramtypes", [String, Object, Object]),
     __metadata("design:returntype", void 0)
 ], DemandesController.prototype, "renvoyerN1", null);
+__decorate([
+    (0, common_1.Post)(':id/demander-suppression'),
+    __param(0, (0, common_1.Param)('id')),
+    __param(1, (0, common_1.Request)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [String, Object]),
+    __metadata("design:returntype", void 0)
+], DemandesController.prototype, "demanderSuppression", null);
+__decorate([
+    (0, common_1.Post)(':id/annuler-suppression'),
+    (0, roles_decorator_1.Roles)('admin', 'manager'),
+    __param(0, (0, common_1.Param)('id')),
+    __param(1, (0, common_1.Request)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [String, Object]),
+    __metadata("design:returntype", void 0)
+], DemandesController.prototype, "annulerSuppression", null);
 __decorate([
     (0, common_1.Delete)(':id'),
     (0, roles_decorator_1.Roles)('admin', 'manager'),

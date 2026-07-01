@@ -65,6 +65,7 @@ let DemandesService = DemandesService_1 = class DemandesService {
         return this.prisma.demande.findMany({
             where,
             orderBy: { createdAt: 'desc' },
+            include: { _count: { select: { commentaires: true } } },
         });
     }
     async findOne(id) {
@@ -240,6 +241,47 @@ let DemandesService = DemandesService_1 = class DemandesService {
         await this.findOne(id);
         return this.prisma.demande.delete({ where: { id } });
     }
+    async demanderSuppression(id, user) {
+        const demande = await this.findOne(id);
+        if (demande.suppressionDemandee) {
+            throw new common_1.BadRequestException('Une demande de suppression est déjà en attente');
+        }
+        const updated = await this.prisma.demande.update({
+            where: { id },
+            data: {
+                suppressionDemandee: true,
+                suppressionDemandeePar: user?.name || user?.email || 'Agent',
+            },
+        });
+        this.audit.log({
+            auteur: user?.email || user?.name || 'Système',
+            auteurId: user?.id,
+            action: 'DEMANDE_SUPPRESSION',
+            entite: 'Demande',
+            entiteId: id,
+            detail: `Suppression demandée par ${user?.name || '—'} pour ${demande.numDemande || id}`,
+        });
+        return updated;
+    }
+    async annulerSuppression(id, user) {
+        await this.findOne(id);
+        const updated = await this.prisma.demande.update({
+            where: { id },
+            data: {
+                suppressionDemandee: false,
+                suppressionDemandeePar: null,
+            },
+        });
+        this.audit.log({
+            auteur: user?.email || user?.name || 'Système',
+            auteurId: user?.id,
+            action: 'REFUS_SUPPRESSION',
+            entite: 'Demande',
+            entiteId: id,
+            detail: `Suppression refusée par ${user?.name || '—'}`,
+        });
+        return updated;
+    }
     async sendSurvey(id, user) {
         console.log('[SURVEY] start', id);
         const demande = await this.prisma.demande.findUnique({ where: { id } });
@@ -292,12 +334,13 @@ let DemandesService = DemandesService_1 = class DemandesService {
         if (demande.niveauTraitement === 2) {
             throw new common_1.BadRequestException('Cette demande est déjà escaladée au niveau 2');
         }
+        const dateEscalade = data.dateEscalade ? new Date(data.dateEscalade) : new Date();
         const updated = await this.prisma.demande.update({
             where: { id },
             data: {
                 niveauTraitement: 2,
                 statut: 'Escaladé',
-                dateEscalade: new Date(),
+                dateEscalade,
                 commentaireEscalade: data.motif || null,
                 agentN2: data.agentN2 || demande.agentN2,
                 service: data.service || demande.service,
@@ -421,7 +464,7 @@ let DemandesService = DemandesService_1 = class DemandesService {
     }
 };
 exports.DemandesService = DemandesService;
-DemandesService.VALID_CANAUX = ['EMAIL', 'TELEPHONE', 'WHATSAPP', 'SITE_WEB', 'GUICHET', 'LINKEDIN', 'FACEBOOK', 'AUTRE'];
+DemandesService.VALID_CANAUX = ['EMAIL', 'TELEPHONE', 'WHATSAPP', 'SITE_WEB', 'GUICHET', 'PHYSIQUE', 'LINKEDIN', 'FACEBOOK', 'AUTRE'];
 exports.DemandesService = DemandesService = DemandesService_1 = __decorate([
     (0, common_1.Injectable)(),
     __metadata("design:paramtypes", [prisma_service_1.PrismaService,

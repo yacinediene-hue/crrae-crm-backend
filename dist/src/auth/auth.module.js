@@ -14,6 +14,8 @@ const auth_service_1 = require("./auth.service");
 const auth_controller_1 = require("./auth.controller");
 const jwt_strategy_1 = require("./jwt.strategy");
 const email_service_1 = require("../email/email.service");
+const audit_module_1 = require("../audit/audit.module");
+const prisma_module_1 = require("../prisma/prisma.module");
 let AuthModule = class AuthModule {
 };
 exports.AuthModule = AuthModule;
@@ -21,6 +23,8 @@ exports.AuthModule = AuthModule = __decorate([
     (0, common_1.Module)({
         imports: [
             passport_1.PassportModule,
+            prisma_module_1.PrismaModule,
+            audit_module_1.AuditModule,
             jwt_1.JwtModule.register({
                 secret: process.env.JWT_SECRET || 'crrae-umoa-secret-2026',
                 signOptions: { expiresIn: '24h' },

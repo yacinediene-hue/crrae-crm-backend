@@ -45,6 +45,8 @@ export declare class EnquetesController {
         niveauTraitement: number;
         dateEscalade: Date | null;
         commentaireEscalade: string | null;
+        suppressionDemandee: boolean;
+        suppressionDemandeePar: string | null;
     } | {
         error: string;
     }>;

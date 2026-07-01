@@ -195,6 +195,112 @@ let ContactsService = class ContactsService {
         await this.findOne(id);
         return this.prisma.contact.delete({ where: { id } });
     }
+    async searchKamagate() {
+        const [users, contacts, demandes, deals] = await Promise.all([
+            this.prisma.user.findMany({ where: { name: { contains: 'kamagate', mode: 'insensitive' } }, select: { id: true, name: true, email: true } }),
+            this.prisma.contact.findMany({ where: { name: { contains: 'kamagate', mode: 'insensitive' } }, select: { id: true, name: true } }),
+            this.prisma.demande.findMany({
+                where: { OR: [
+                        { nomPrenom: { contains: 'kamagate', mode: 'insensitive' } },
+                        { agentN1: { contains: 'kamagate', mode: 'insensitive' } },
+                        { agentN2: { contains: 'kamagate', mode: 'insensitive' } },
+                    ] },
+                select: { id: true, numDemande: true, nomPrenom: true, agentN1: true, agentN2: true },
+            }),
+            this.prisma.deal.findMany({
+                where: { OR: [
+                        { nomPrenom: { contains: 'kamagate', mode: 'insensitive' } },
+                        { agentResponsable: { contains: 'kamagate', mode: 'insensitive' } },
+                    ] },
+                select: { id: true, nomPrenom: true, agentResponsable: true },
+            }),
+        ]);
+        return { users, contacts, demandes, deals };
+    }
+    uniformiserKamagate(valeur) {
+        if (!valeur)
+            return null;
+        const corrige = valeur
+            .replace(/\bfatou\s+kamagate\b/gi, 'KAMAGATE Fatoumata')
+            .replace(/\bkamagate\s+fatou\b/gi, 'KAMAGATE Fatoumata');
+        return corrige !== valeur ? corrige : null;
+    }
+    async migrerNomKamagate() {
+        const rapport = [];
+        let total = 0;
+        const users = await this.prisma.user.findMany({ where: { name: { contains: 'kamagate', mode: 'insensitive' } } });
+        for (const u of users) {
+            const corrige = this.uniformiserKamagate(u.name);
+            if (corrige) {
+                await this.prisma.user.update({ where: { id: u.id }, data: { name: corrige } });
+                rapport.push({ table: 'User', champ: 'name', avant: u.name, apres: corrige });
+                total++;
+            }
+        }
+        const contacts = await this.prisma.contact.findMany({ where: { name: { contains: 'kamagate', mode: 'insensitive' } } });
+        for (const c of contacts) {
+            const corrige = this.uniformiserKamagate(c.name);
+            if (corrige) {
+                await this.prisma.contact.update({ where: { id: c.id }, data: { name: corrige } });
+                rapport.push({ table: 'Contact', champ: 'name', avant: c.name, apres: corrige });
+                total++;
+            }
+        }
+        const demandes = await this.prisma.demande.findMany({
+            where: { OR: [
+                    { nomPrenom: { contains: 'kamagate', mode: 'insensitive' } },
+                    { agentN1: { contains: 'kamagate', mode: 'insensitive' } },
+                    { agentN2: { contains: 'kamagate', mode: 'insensitive' } },
+                ] },
+        });
+        for (const d of demandes) {
+            const data = {};
+            const npCorrige = this.uniformiserKamagate(d.nomPrenom);
+            const a1Corrige = this.uniformiserKamagate(d.agentN1);
+            const a2Corrige = this.uniformiserKamagate(d.agentN2);
+            if (npCorrige) {
+                data.nomPrenom = npCorrige;
+                rapport.push({ table: 'Demande', champ: 'nomPrenom', id: d.numDemande, avant: d.nomPrenom, apres: npCorrige });
+                total++;
+            }
+            if (a1Corrige) {
+                data.agentN1 = a1Corrige;
+                rapport.push({ table: 'Demande', champ: 'agentN1', id: d.numDemande, avant: d.agentN1, apres: a1Corrige });
+                total++;
+            }
+            if (a2Corrige) {
+                data.agentN2 = a2Corrige;
+                rapport.push({ table: 'Demande', champ: 'agentN2', id: d.numDemande, avant: d.agentN2, apres: a2Corrige });
+                total++;
+            }
+            if (Object.keys(data).length > 0)
+                await this.prisma.demande.update({ where: { id: d.id }, data });
+        }
+        const deals = await this.prisma.deal.findMany({
+            where: { OR: [
+                    { nomPrenom: { contains: 'kamagate', mode: 'insensitive' } },
+                    { agentResponsable: { contains: 'kamagate', mode: 'insensitive' } },
+                ] },
+        });
+        for (const d of deals) {
+            const data = {};
+            const npCorrige = this.uniformiserKamagate(d.nomPrenom);
+            const arCorrige = this.uniformiserKamagate(d.agentResponsable);
+            if (npCorrige) {
+                data.nomPrenom = npCorrige;
+                rapport.push({ table: 'Deal', champ: 'nomPrenom', id: d.id, avant: d.nomPrenom, apres: npCorrige });
+                total++;
+            }
+            if (arCorrige) {
+                data.agentResponsable = arCorrige;
+                rapport.push({ table: 'Deal', champ: 'agentResponsable', id: d.id, avant: d.agentResponsable, apres: arCorrige });
+                total++;
+            }
+            if (Object.keys(data).length > 0)
+                await this.prisma.deal.update({ where: { id: d.id }, data });
+        }
+        return { cible: 'KAMAGATE Fatoumata', rapport, total };
+    }
 };
 exports.ContactsService = ContactsService;
 exports.ContactsService = ContactsService = __decorate([

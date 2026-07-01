@@ -25,6 +25,8 @@ const commentaires_module_1 = require("./commentaires/commentaires.module");
 const documents_module_1 = require("./documents/documents.module");
 const alertes_module_1 = require("./alertes/alertes.module");
 const story_module_1 = require("./story/story.module");
+const crypto_module_1 = require("./crypto/crypto.module");
+const backup_module_1 = require("./backup/backup.module");
 const schedule_1 = require("@nestjs/schedule");
 let AppModule = class AppModule {
 };
@@ -50,6 +52,8 @@ exports.AppModule = AppModule = __decorate([
             schedule_1.ScheduleModule.forRoot(),
             alertes_module_1.AlertesModule,
             story_module_1.StoryModule,
+            crypto_module_1.CryptoModule,
+            backup_module_1.BackupModule,
         ],
     })
 ], AppModule);

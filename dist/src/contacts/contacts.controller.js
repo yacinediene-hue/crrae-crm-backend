@@ -43,6 +43,14 @@ let ContactsController = class ContactsController {
         this.audit.log({ auteur: req.user.email, auteurId: req.user.id, action: 'DELETE_CONTACT', entite: 'Contact', entiteId: id });
         return result;
     }
+    async migrerNomKamagate(req) {
+        const result = await this.service.migrerNomKamagate();
+        this.audit.log({ auteur: req.user.email, auteurId: req.user.id, action: 'UPDATE', entite: 'Contact', detail: `Migration KAMAGATE Fatoumata : ${result.total} enregistrement(s) mis à jour` });
+        return result;
+    }
+    async searchKamagate() {
+        return this.service.searchKamagate();
+    }
 };
 exports.ContactsController = ContactsController;
 __decorate([
@@ -100,6 +108,21 @@ __decorate([
     __metadata("design:paramtypes", [String, Object]),
     __metadata("design:returntype", Promise)
 ], ContactsController.prototype, "remove", null);
+__decorate([
+    (0, common_1.Post)('admin/migrate-kamagate'),
+    (0, roles_decorator_1.Roles)('admin'),
+    __param(0, (0, common_1.Request)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object]),
+    __metadata("design:returntype", Promise)
+], ContactsController.prototype, "migrerNomKamagate", null);
+__decorate([
+    (0, common_1.Get)('admin/search-kamagate'),
+    (0, roles_decorator_1.Roles)('admin'),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", []),
+    __metadata("design:returntype", Promise)
+], ContactsController.prototype, "searchKamagate", null);
 exports.ContactsController = ContactsController = __decorate([
     (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard, roles_guard_1.RolesGuard),
     (0, common_1.Controller)('contacts'),

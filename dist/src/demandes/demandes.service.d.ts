@@ -9,7 +9,11 @@ export declare class DemandesService {
     constructor(prisma: PrismaService, emailService: EmailService, audit: AuditService);
     private computePriorite;
     private computeDelaiAndRespect;
-    findAll(query?: any): import(".prisma/client").Prisma.PrismaPromise<{
+    findAll(query?: any): import(".prisma/client").Prisma.PrismaPromise<({
+        _count: {
+            commentaires: number;
+        };
+    } & {
         id: string;
         email: string | null;
         createdAt: Date;
@@ -42,7 +46,9 @@ export declare class DemandesService {
         niveauTraitement: number;
         dateEscalade: Date | null;
         commentaireEscalade: string | null;
-    }[]>;
+        suppressionDemandee: boolean;
+        suppressionDemandeePar: string | null;
+    })[]>;
     findOne(id: string): Promise<{
         id: string;
         email: string | null;
@@ -76,6 +82,8 @@ export declare class DemandesService {
         niveauTraitement: number;
         dateEscalade: Date | null;
         commentaireEscalade: string | null;
+        suppressionDemandee: boolean;
+        suppressionDemandeePar: string | null;
     }>;
     private static readonly VALID_CANAUX;
     private sanitize;
@@ -114,6 +122,80 @@ export declare class DemandesService {
         niveauTraitement: number;
         dateEscalade: Date | null;
         commentaireEscalade: string | null;
+        suppressionDemandee: boolean;
+        suppressionDemandeePar: string | null;
+    }>;
+    demanderSuppression(id: string, user: any): Promise<{
+        id: string;
+        email: string | null;
+        createdAt: Date;
+        nomPrenom: string;
+        pays: string | null;
+        telephone: string | null;
+        typeClient: string;
+        service: string | null;
+        commentaire: string | null;
+        updatedAt: Date;
+        canal: import(".prisma/client").$Enums.CanalDemande | null;
+        statut: string;
+        numDemande: string | null;
+        agentN1: string | null;
+        matricule: string | null;
+        adherent: string | null;
+        heureAppel: string | null;
+        objetDemande: string | null;
+        agentN2: string | null;
+        dateReception: Date | null;
+        dateTraitement: Date | null;
+        priorite: string | null;
+        actionMenee: string | null;
+        delaiTraitement: number | null;
+        respectDelai: string | null;
+        canalCommunication: string | null;
+        enqueteEnvoyee: boolean;
+        dateEnvoiEnquete: Date | null;
+        noteSatisfaction: number | null;
+        niveauTraitement: number;
+        dateEscalade: Date | null;
+        commentaireEscalade: string | null;
+        suppressionDemandee: boolean;
+        suppressionDemandeePar: string | null;
+    }>;
+    annulerSuppression(id: string, user: any): Promise<{
+        id: string;
+        email: string | null;
+        createdAt: Date;
+        nomPrenom: string;
+        pays: string | null;
+        telephone: string | null;
+        typeClient: string;
+        service: string | null;
+        commentaire: string | null;
+        updatedAt: Date;
+        canal: import(".prisma/client").$Enums.CanalDemande | null;
+        statut: string;
+        numDemande: string | null;
+        agentN1: string | null;
+        matricule: string | null;
+        adherent: string | null;
+        heureAppel: string | null;
+        objetDemande: string | null;
+        agentN2: string | null;
+        dateReception: Date | null;
+        dateTraitement: Date | null;
+        priorite: string | null;
+        actionMenee: string | null;
+        delaiTraitement: number | null;
+        respectDelai: string | null;
+        canalCommunication: string | null;
+        enqueteEnvoyee: boolean;
+        dateEnvoiEnquete: Date | null;
+        noteSatisfaction: number | null;
+        niveauTraitement: number;
+        dateEscalade: Date | null;
+        commentaireEscalade: string | null;
+        suppressionDemandee: boolean;
+        suppressionDemandeePar: string | null;
     }>;
     sendSurvey(id: string, user?: any): Promise<{
         id: string;
@@ -148,11 +230,14 @@ export declare class DemandesService {
         niveauTraitement: number;
         dateEscalade: Date | null;
         commentaireEscalade: string | null;
+        suppressionDemandee: boolean;
+        suppressionDemandeePar: string | null;
     }>;
     escalader(id: string, data: {
         agentN2?: string;
         service?: string;
         motif?: string;
+        dateEscalade?: string;
     }, user?: any): Promise<{
         id: string;
         email: string | null;
@@ -186,6 +271,8 @@ export declare class DemandesService {
         niveauTraitement: number;
         dateEscalade: Date | null;
         commentaireEscalade: string | null;
+        suppressionDemandee: boolean;
+        suppressionDemandeePar: string | null;
     }>;
     prendreEnCharge(id: string, user?: any): Promise<{
         id: string;
@@ -220,6 +307,8 @@ export declare class DemandesService {
         niveauTraitement: number;
         dateEscalade: Date | null;
         commentaireEscalade: string | null;
+        suppressionDemandee: boolean;
+        suppressionDemandeePar: string | null;
     }>;
     renvoyerN1(id: string, data: {
         motif?: string;
@@ -256,5 +345,7 @@ export declare class DemandesService {
         niveauTraitement: number;
         dateEscalade: Date | null;
         commentaireEscalade: string | null;
+        suppressionDemandee: boolean;
+        suppressionDemandeePar: string | null;
     }>;
 }

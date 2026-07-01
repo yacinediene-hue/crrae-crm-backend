@@ -160,4 +160,32 @@ export declare class ContactsController {
         notes: string | null;
         assignedTo: string | null;
     }>;
+    migrerNomKamagate(req: any): Promise<{
+        cible: string;
+        rapport: any[];
+        total: number;
+    }>;
+    searchKamagate(): Promise<{
+        users: {
+            id: string;
+            email: string;
+            name: string;
+        }[];
+        contacts: {
+            id: string;
+            name: string;
+        }[];
+        demandes: {
+            id: string;
+            nomPrenom: string;
+            numDemande: string;
+            agentN1: string;
+            agentN2: string;
+        }[];
+        deals: {
+            id: string;
+            nomPrenom: string;
+            agentResponsable: string;
+        }[];
+    }>;
 }
