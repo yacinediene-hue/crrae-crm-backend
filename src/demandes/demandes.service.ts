@@ -50,7 +50,7 @@ export class DemandesService {
     return { delaiTraitement, respectDelai };
   }
 
-  findAll(query?: any) {
+  async findAll(query?: any) {
     const where: any = {};
 
     if (query?.statut) where.statut = query.statut;
@@ -58,21 +58,42 @@ export class DemandesService {
     if (query?.canal) where.canal = query.canal;
     if (query?.typeClient) where.typeClient = query.typeClient;
 
-    return this.prisma.demande.findMany({
+    const demandes = await this.prisma.demande.findMany({
       where,
       orderBy: { createdAt: 'desc' },
     });
+
+    try {
+      const rows: any[] = await this.prisma.$queryRawUnsafe(
+        `SELECT id, "suppressionDemandee", "suppressionDemandeePar" FROM "Demande"`,
+      );
+      const map = new Map(rows.map(r => [r.id, r]));
+      return demandes.map(d => ({
+        ...d,
+        suppressionDemandee: map.get(d.id)?.suppressionDemandee ?? false,
+        suppressionDemandeePar: map.get(d.id)?.suppressionDemandeePar ?? null,
+      }));
+    } catch {
+      return demandes;
+    }
   }
 
   async findOne(id: string) {
-    const item = await this.prisma.demande.findUnique({
-      where: { id },
-  
-    });
+    const item = await this.prisma.demande.findUnique({ where: { id } });
 
     if (!item) {
       throw new NotFoundException(`Demande ${id} introuvable`);
     }
+
+    try {
+      const rows: any[] = await this.prisma.$queryRawUnsafe(
+        `SELECT "suppressionDemandee", "suppressionDemandeePar" FROM "Demande" WHERE id = $1`,
+        id,
+      );
+      if (rows[0]) {
+        return { ...item, suppressionDemandee: rows[0].suppressionDemandee, suppressionDemandeePar: rows[0].suppressionDemandeePar };
+      }
+    } catch {}
 
     return item;
   }
@@ -80,7 +101,7 @@ export class DemandesService {
   private static readonly VALID_CANAUX = ['EMAIL','TELEPHONE','WHATSAPP','SITE_WEB','GUICHET','PHYSIQUE','LINKEDIN','FACEBOOK','AUTRE'];
 
   private sanitize(data: any): any {
-    const excluded = ['profilClient', 'niveauTraitement', 'dateEscalade', 'commentaireEscalade', 'skipEmail'];
+    const excluded = ['profilClient', 'niveauTraitement', 'dateEscalade', 'commentaireEscalade', 'skipEmail', 'suppressionDemandee', 'suppressionDemandeePar'];
     const nonNullable = ['typeClient', 'nomPrenom', 'statut'];
     const result: any = {};
     for (const key of Object.keys(data)) {
@@ -264,13 +285,11 @@ export class DemandesService {
     if ((demande as any).suppressionDemandee) {
       throw new BadRequestException('Une demande de suppression est déjà en attente');
     }
-    const updated = await this.prisma.demande.update({
-      where: { id },
-      data: {
-        suppressionDemandee: true,
-        suppressionDemandeePar: user?.name || user?.email || 'Agent',
-      },
-    });
+    await this.prisma.$executeRawUnsafe(
+      `UPDATE "Demande" SET "suppressionDemandee" = true, "suppressionDemandeePar" = $1 WHERE id = $2`,
+      user?.name || user?.email || 'Agent',
+      id,
+    );
     this.audit.log({
       auteur: user?.email || user?.name || 'Système',
       auteurId: user?.id,
@@ -279,18 +298,15 @@ export class DemandesService {
       entiteId: id,
       detail: `Suppression demandée par ${user?.name || '—'} pour ${(demande as any).numDemande || id}`,
     });
-    return updated;
+    return this.findOne(id);
   }
 
   async annulerSuppression(id: string, user: any) {
     await this.findOne(id);
-    const updated = await this.prisma.demande.update({
-      where: { id },
-      data: {
-        suppressionDemandee: false,
-        suppressionDemandeePar: null,
-      },
-    });
+    await this.prisma.$executeRawUnsafe(
+      `UPDATE "Demande" SET "suppressionDemandee" = false, "suppressionDemandeePar" = NULL WHERE id = $1`,
+      id,
+    );
     this.audit.log({
       auteur: user?.email || user?.name || 'Système',
       auteurId: user?.id,
@@ -299,7 +315,7 @@ export class DemandesService {
       entiteId: id,
       detail: `Suppression refusée par ${user?.name || '—'}`,
     });
-    return updated;
+    return this.findOne(id);
   }
 
   async sendSurvey(id: string, user?: any) {

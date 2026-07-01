@@ -233,8 +233,6 @@ model Demande {
   niveauTraitement     Int           @default(1)
   dateEscalade         DateTime?
   commentaireEscalade  String?
-  suppressionDemandee    Boolean       @default(false)
-  suppressionDemandeePar String?
   createdAt            DateTime      @default(now())
   updatedAt            DateTime      @updatedAt
   commentaires       Commentaire[]
