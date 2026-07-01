@@ -50,7 +50,7 @@ export class DemandesService {
     return { delaiTraitement, respectDelai };
   }
 
-  async findAll(query?: any) {
+  findAll(query?: any) {
     const where: any = {};
 
     if (query?.statut) where.statut = query.statut;
@@ -58,24 +58,10 @@ export class DemandesService {
     if (query?.canal) where.canal = query.canal;
     if (query?.typeClient) where.typeClient = query.typeClient;
 
-    const demandes = await this.prisma.demande.findMany({
+    return this.prisma.demande.findMany({
       where,
       orderBy: { createdAt: 'desc' },
     });
-
-    try {
-      const rows: any[] = await this.prisma.$queryRawUnsafe(
-        `SELECT id, "suppressionDemandee", "suppressionDemandeePar" FROM "Demande"`,
-      );
-      const map = new Map(rows.map(r => [r.id, r]));
-      return demandes.map(d => ({
-        ...d,
-        suppressionDemandee: map.get(d.id)?.suppressionDemandee ?? false,
-        suppressionDemandeePar: map.get(d.id)?.suppressionDemandeePar ?? null,
-      }));
-    } catch {
-      return demandes;
-    }
   }
 
   async findOne(id: string) {
