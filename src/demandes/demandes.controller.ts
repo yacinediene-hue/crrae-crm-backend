@@ -45,6 +45,17 @@ export class DemandesController {
     return this.service.renvoyerN1(id, body, req.user);
   }
 
+  @Post(':id/demander-suppression')
+  demanderSuppression(@Param('id') id: string, @Request() req: any) {
+    return this.service.demanderSuppression(id, req.user);
+  }
+
+  @Post(':id/annuler-suppression')
+  @Roles('admin', 'manager')
+  annulerSuppression(@Param('id') id: string, @Request() req: any) {
+    return this.service.annulerSuppression(id, req.user);
+  }
+
   @Delete(':id')
   @Roles('admin', 'manager')
   async remove(@Param('id') id: string, @Request() req: any) {

@@ -260,6 +260,49 @@ export class DemandesService {
     return this.prisma.demande.delete({ where: { id } });
   }
 
+  async demanderSuppression(id: string, user: any) {
+    const demande = await this.findOne(id);
+    if ((demande as any).suppressionDemandee) {
+      throw new BadRequestException('Une demande de suppression est déjà en attente');
+    }
+    const updated = await this.prisma.demande.update({
+      where: { id },
+      data: {
+        suppressionDemandee: true,
+        suppressionDemandeePar: user?.name || user?.email || 'Agent',
+      },
+    });
+    this.audit.log({
+      auteur: user?.email || user?.name || 'Système',
+      auteurId: user?.id,
+      action: 'DEMANDE_SUPPRESSION',
+      entite: 'Demande',
+      entiteId: id,
+      detail: `Suppression demandée par ${user?.name || '—'} pour ${(demande as any).numDemande || id}`,
+    });
+    return updated;
+  }
+
+  async annulerSuppression(id: string, user: any) {
+    await this.findOne(id);
+    const updated = await this.prisma.demande.update({
+      where: { id },
+      data: {
+        suppressionDemandee: false,
+        suppressionDemandeePar: null,
+      },
+    });
+    this.audit.log({
+      auteur: user?.email || user?.name || 'Système',
+      auteurId: user?.id,
+      action: 'REFUS_SUPPRESSION',
+      entite: 'Demande',
+      entiteId: id,
+      detail: `Suppression refusée par ${user?.name || '—'}`,
+    });
+    return updated;
+  }
+
   async sendSurvey(id: string, user?: any) {
     console.log('[SURVEY] start', id);
     const demande = await this.prisma.demande.findUnique({ where: { id } });
