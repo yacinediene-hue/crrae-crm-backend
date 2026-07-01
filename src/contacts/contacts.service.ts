@@ -214,6 +214,27 @@ export class ContactsService {
     return this.prisma.contact.delete({ where: { id } });
   }
 
+  async fixCanalDemandeEnum() {
+    // Vérifie si PHYSIQUE est déjà dans l'enum
+    const check: any[] = await this.prisma.$queryRaw`
+      SELECT enumlabel FROM pg_enum
+      WHERE enumtypid = '"CanalDemande"'::regtype
+      ORDER BY enumsortorder
+    `;
+    const labels = check.map((r: any) => r.enumlabel);
+    if (labels.includes('PHYSIQUE')) {
+      return { status: 'already_exists', valeurs: labels };
+    }
+    // Exécute en dehors de toute transaction Prisma (DDL)
+    await this.prisma.$executeRawUnsafe(`ALTER TYPE "CanalDemande" ADD VALUE 'PHYSIQUE' AFTER 'GUICHET'`);
+    const after: any[] = await this.prisma.$queryRaw`
+      SELECT enumlabel FROM pg_enum
+      WHERE enumtypid = '"CanalDemande"'::regtype
+      ORDER BY enumsortorder
+    `;
+    return { status: 'ok', valeurs: after.map((r: any) => r.enumlabel) };
+  }
+
   async searchKamagate() {
     const [users, contacts, demandes, deals] = await Promise.all([
       this.prisma.user.findMany({ where: { name: { contains: 'kamagate', mode: 'insensitive' } }, select: { id: true, name: true, email: true } }),

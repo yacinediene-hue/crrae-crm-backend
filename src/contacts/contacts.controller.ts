@@ -59,4 +59,10 @@ export class ContactsController {
   async searchKamagate() {
     return this.service.searchKamagate();
   }
+
+  @Post('admin/fix-canal-enum')
+  @Roles('admin')
+  async fixCanalEnum() {
+    return this.service.fixCanalDemandeEnum();
+  }
 }
