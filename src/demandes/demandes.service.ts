@@ -309,18 +309,20 @@ export class DemandesService {
     return updated;
   }
 
-  async escalader(id: string, data: { agentN2?: string; service?: string; motif?: string }, user?: any) {
+  async escalader(id: string, data: { agentN2?: string; service?: string; motif?: string; dateEscalade?: string }, user?: any) {
     const demande = await this.findOne(id);
     if ((demande as any).niveauTraitement === 2) {
       throw new BadRequestException('Cette demande est déjà escaladée au niveau 2');
     }
+
+    const dateEscalade = data.dateEscalade ? new Date(data.dateEscalade) : new Date();
 
     const updated = await this.prisma.demande.update({
       where: { id },
       data: {
         niveauTraitement: 2,
         statut: 'Escaladé',
-        dateEscalade: new Date(),
+        dateEscalade,
         commentaireEscalade: data.motif || null,
         agentN2: data.agentN2 || demande.agentN2,
         service: data.service || demande.service,
