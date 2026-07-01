@@ -77,6 +77,8 @@ async function main() {
     await exec(`ALTER TABLE "Demande" ADD COLUMN IF NOT EXISTS "niveauTraitement" INTEGER NOT NULL DEFAULT 1`);
     await exec(`ALTER TABLE "Demande" ADD COLUMN IF NOT EXISTS "dateEscalade" TIMESTAMP(3)`);
     await exec(`ALTER TABLE "Demande" ADD COLUMN IF NOT EXISTS "commentaireEscalade" TEXT`);
+    await exec(`ALTER TABLE "Demande" ADD COLUMN IF NOT EXISTS "suppressionDemandee" BOOLEAN NOT NULL DEFAULT false`);
+    await exec(`ALTER TABLE "Demande" ADD COLUMN IF NOT EXISTS "suppressionDemandeePar" TEXT`);
 
     // DocumentDemande — pièces jointes des demandes
     await exec(`CREATE TABLE IF NOT EXISTS "DocumentDemande" ("id" TEXT NOT NULL, "demandeId" TEXT NOT NULL, "nom" TEXT NOT NULL, "type" TEXT NOT NULL, "taille" INTEGER NOT NULL, "contenu" BYTEA NOT NULL, "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP, CONSTRAINT "DocumentDemande_pkey" PRIMARY KEY ("id"), CONSTRAINT "DocumentDemande_demandeId_fkey" FOREIGN KEY ("demandeId") REFERENCES "Demande"("id") ON DELETE CASCADE ON UPDATE CASCADE)`);
