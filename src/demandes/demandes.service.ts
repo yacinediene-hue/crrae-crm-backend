@@ -61,7 +61,7 @@ export class DemandesService {
     return this.prisma.demande.findMany({
       where,
       orderBy: { createdAt: 'desc' },
-
+      include: { _count: { select: { commentaires: true } } },
     });
   }
 
