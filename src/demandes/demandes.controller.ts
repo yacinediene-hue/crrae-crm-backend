@@ -13,6 +13,16 @@ export class DemandesController {
   @Get('agents-n2')
   getAgentsN2() { return AGENTS_N2; }
 
+  @Get('admin/stats-enquetes')
+  @Roles('admin', 'manager')
+  statsEnquetes() { return this.service.statsEnquetes(); }
+
+  @Post('admin/import-enquetes')
+  @Roles('admin')
+  importEnquetes(@Body() body: { rows: any[] }, @Request() req: any) {
+    return this.service.importEnquetes(body.rows || [], req.user);
+  }
+
   @Get()
   findAll(@Query() query: any) { return this.service.findAll(query); }
 

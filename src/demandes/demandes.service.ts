@@ -448,4 +448,73 @@ export class DemandesService {
 
     return updated;
   }
+
+  async importEnquetes(rows: any[], user?: any) {
+    let updated = 0;
+    const notFound: string[] = [];
+    const errors: string[] = [];
+
+    for (const row of rows) {
+      const numDemande = String(row.numDemande || '').trim();
+      const note = parseInt(String(row.noteSatisfaction || ''), 10);
+      const avis = String(row.avis || '').trim();
+
+      if (!numDemande) { errors.push('Ligne sans numéro de demande'); continue; }
+      if (isNaN(note) || note < 1 || note > 5) {
+        errors.push(`${numDemande}: note invalide (${row.noteSatisfaction})`);
+        continue;
+      }
+
+      try {
+        const demande = await this.prisma.demande.findUnique({
+          where: { numDemande },
+          select: { id: true, numDemande: true },
+        });
+        if (!demande) { notFound.push(numDemande); continue; }
+
+        await this.prisma.demande.update({
+          where: { id: demande.id },
+          data: { noteSatisfaction: note, enqueteEnvoyee: true },
+        });
+
+        if (avis) {
+          await this.prisma.timeline.create({
+            data: {
+              demandeId: demande.id,
+              auteur: 'Client',
+              action: 'Avis satisfaction',
+              canal: 'ENQUETE',
+              detail: `Note : ${note}/5 — ${avis}`,
+            },
+          }).catch(() => {});
+        }
+
+        updated++;
+      } catch (e: any) {
+        errors.push(`${numDemande}: ${e?.message}`);
+      }
+    }
+
+    this.audit.log({
+      auteur: user?.email || user?.name || 'Système',
+      auteurId: user?.id,
+      action: 'IMPORT_ENQUETES',
+      entite: 'Demande',
+      detail: `Import ${updated} réponse(s) enquête sur ${rows.length} ligne(s)`,
+    });
+
+    return { total: rows.length, updated, notFound, errors };
+  }
+
+  async statsEnquetes() {
+    const demandes = await this.prisma.demande.findMany({
+      select: {
+        numDemande: true, nomPrenom: true, agentN1: true, service: true,
+        statut: true, dateReception: true, dateTraitement: true,
+        enqueteEnvoyee: true, dateEnvoiEnquete: true, noteSatisfaction: true,
+      },
+      orderBy: { createdAt: 'desc' },
+    });
+    return demandes;
+  }
 }
