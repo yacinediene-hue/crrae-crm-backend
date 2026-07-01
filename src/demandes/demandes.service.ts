@@ -449,49 +449,107 @@ export class DemandesService {
     return updated;
   }
 
+  private parseSatisfactionNote(v: any): number | null {
+    const s = String(v || '').trim();
+    if (!s) return null;
+    const n = Number(s);
+    if (!isNaN(n) && n >= 1 && n <= 5) return Math.round(n);
+    const low = s.toLowerCase();
+    if (low.includes('très satisf')) return 5;
+    if (low.includes('satisf') && !low.includes('insatisf')) return 4;
+    if (low.includes('neutre') || low.includes('ni satisf')) return 3;
+    if (low.includes('très insatisf')) return 1;
+    if (low.includes('insatisf')) return 2;
+    return null;
+  }
+
   async importEnquetes(rows: any[], user?: any) {
     let updated = 0;
     const notFound: string[] = [];
     const errors: string[] = [];
 
     for (const row of rows) {
-      const numDemande = String(row.numDemande || '').trim();
-      const note = parseInt(String(row.noteSatisfaction || ''), 10);
+      const email = String(row.email || '').trim().toLowerCase();
+      const nom = String(row.nom || '').trim();
       const avis = String(row.avis || '').trim();
+      const recommande = String(row.recommandeRaw || '').trim();
+      const heureFin = row.heureFin ? String(row.heureFin).trim() : null;
 
-      if (!numDemande) { errors.push('Ligne sans numéro de demande'); continue; }
-      if (isNaN(note) || note < 1 || note > 5) {
-        errors.push(`${numDemande}: note invalide (${row.noteSatisfaction})`);
+      // La note peut déjà être parsée par le frontend, sinon on reparse
+      const note = (typeof row.noteSatisfaction === 'number' && row.noteSatisfaction >= 1 && row.noteSatisfaction <= 5)
+        ? row.noteSatisfaction
+        : this.parseSatisfactionNote(row.satisfactionRaw || row.noteSatisfaction);
+
+      if (!email && !nom) { errors.push('Ligne sans email ni nom'); continue; }
+      if (note === null) {
+        const ref = email || nom;
+        errors.push(`${ref}: note non reconnue ("${row.satisfactionRaw || row.noteSatisfaction}")`);
         continue;
       }
 
       try {
-        const demande = await this.prisma.demande.findUnique({
-          where: { numDemande },
-          select: { id: true, numDemande: true },
-        });
-        if (!demande) { notFound.push(numDemande); continue; }
+        let demande: any = null;
+
+        // 1) Match par email sur la demande la plus récente avec enquête envoyée
+        if (email) {
+          demande = await this.prisma.demande.findFirst({
+            where: { email: { equals: email, mode: 'insensitive' }, enqueteEnvoyee: true },
+            orderBy: { dateEnvoiEnquete: 'desc' },
+            select: { id: true, numDemande: true },
+          });
+          // Si aucune enquête envoyée, prendre la plus récente demande traitée avec cet email
+          if (!demande) {
+            demande = await this.prisma.demande.findFirst({
+              where: { email: { equals: email, mode: 'insensitive' }, statut: { in: ['Traité', 'Clôturé'] } },
+              orderBy: { dateTraitement: 'desc' },
+              select: { id: true, numDemande: true },
+            });
+          }
+        }
+
+        // 2) Match par nom si pas trouvé par email
+        if (!demande && nom) {
+          demande = await this.prisma.demande.findFirst({
+            where: { nomPrenom: { contains: nom, mode: 'insensitive' }, enqueteEnvoyee: true },
+            orderBy: { dateEnvoiEnquete: 'desc' },
+            select: { id: true, numDemande: true },
+          });
+          if (!demande) {
+            demande = await this.prisma.demande.findFirst({
+              where: { nomPrenom: { contains: nom, mode: 'insensitive' }, statut: { in: ['Traité', 'Clôturé'] } },
+              orderBy: { dateTraitement: 'desc' },
+              select: { id: true, numDemande: true },
+            });
+          }
+        }
+
+        if (!demande) { notFound.push(email || nom); continue; }
 
         await this.prisma.demande.update({
           where: { id: demande.id },
           data: { noteSatisfaction: note, enqueteEnvoyee: true },
         });
 
-        if (avis) {
-          await this.prisma.timeline.create({
-            data: {
-              demandeId: demande.id,
-              auteur: 'Client',
-              action: 'Avis satisfaction',
-              canal: 'ENQUETE',
-              detail: `Note : ${note}/5 — ${avis}`,
-            },
-          }).catch(() => {});
-        }
+        const detail = [
+          `Note : ${note}/5`,
+          recommande ? `Recommande : ${recommande}` : null,
+          avis ? `Commentaire : ${avis}` : null,
+          heureFin ? `Soumis le : ${heureFin}` : null,
+        ].filter(Boolean).join(' — ');
+
+        await this.prisma.timeline.create({
+          data: {
+            demandeId: demande.id,
+            auteur: nom || email,
+            action: 'Réponse enquête satisfaction',
+            canal: 'ENQUETE',
+            detail,
+          },
+        }).catch(() => {});
 
         updated++;
       } catch (e: any) {
-        errors.push(`${numDemande}: ${e?.message}`);
+        errors.push(`${email || nom}: ${e?.message}`);
       }
     }
 
