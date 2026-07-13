@@ -100,7 +100,7 @@ export class DemandesService {
       if (nonNullable.includes(key)) {
         if (key === 'nomPrenom') result[key] = data[key] || 'Non renseigné';
         else if (key === 'typeClient') result[key] = data[key] || 'Actif';
-        else if (key === 'statut') result[key] = data[key] || 'En cours';
+        else if (key === 'statut') result[key] = data[key] || 'Nouveau';
         else result[key] = data[key] || undefined;
       } else {
         result[key] = data[key] === '' ? null : data[key];
@@ -186,12 +186,12 @@ export class DemandesService {
 
     const resolvedDateTraitement = data.dateTraitement
       ? new Date(data.dateTraitement)
-      : data.statut === 'Traité' && !existing.dateTraitement
+      : data.statut === 'Clôturée' && !existing.dateTraitement
         ? new Date()
         : existing.dateTraitement;
 
     const resolvedStatut = data.statut
-      ?? (resolvedDateTraitement ? 'Traité' : 'En cours');
+      ?? (resolvedDateTraitement ? 'Clôturée' : 'En cours');
 
     const mergedData = {
       ...existing,
@@ -355,8 +355,8 @@ export class DemandesService {
 
   async escalader(id: string, data: { agentN2?: string; service?: string; motif?: string; dateEscalade?: string }, user?: any) {
     const demande = await this.findOne(id);
-    if ((demande as any).niveauTraitement === 2) {
-      throw new BadRequestException('Cette demande est déjà escaladée au niveau 2');
+    if ((demande as any).statut === 'Transmis au Back Office 2') {
+      throw new BadRequestException('Cette demande est déjà transmise au Back Office 2');
     }
 
     const dateEscalade = data.dateEscalade ? new Date(data.dateEscalade) : new Date();
@@ -365,7 +365,7 @@ export class DemandesService {
       where: { id },
       data: {
         niveauTraitement: 2,
-        statut: 'Escaladé',
+        statut: 'Transmis au Back Office 2',
         dateEscalade,
         commentaireEscalade: data.motif || null,
         agentN2: data.agentN2 || demande.agentN2,
@@ -420,14 +420,14 @@ export class DemandesService {
 
   async prendreEnCharge(id: string, user?: any) {
     const demande = await this.findOne(id);
-    if ((demande as any).niveauTraitement !== 2) {
-      throw new BadRequestException('Cette demande n\'est pas au niveau N2');
+    if ((demande as any).statut !== 'Transmis au Back Office 2') {
+      throw new BadRequestException('Cette demande n\'est pas transmise au Back Office 2');
     }
 
     const updated = await this.prisma.demande.update({
       where: { id },
       data: {
-        statut: 'En cours N2',
+        statut: 'Transmis au Back Office 2',
         agentN2: user?.name || (demande as any).agentN2,
       },
     });
