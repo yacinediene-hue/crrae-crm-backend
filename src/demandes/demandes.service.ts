@@ -355,8 +355,11 @@ export class DemandesService {
 
   async escalader(id: string, data: { agentN2?: string; service?: string; motif?: string; dateEscalade?: string }, user?: any) {
     const demande = await this.findOne(id);
-    if ((demande as any).statut === 'Transmis au Back Office 2') {
-      throw new BadRequestException('Cette demande est déjà transmise au Back Office 2');
+    if ((demande as any).niveauTraitement >= 2) {
+      throw new BadRequestException('Cette demande est déjà transmise au Back Office N1');
+    }
+    if (['Clôturée', 'Traité', 'Clôturé'].includes((demande as any).statut)) {
+      throw new BadRequestException('Impossible d\'escalader une demande clôturée');
     }
 
     const dateEscalade = data.dateEscalade ? new Date(data.dateEscalade) : new Date();
@@ -365,7 +368,7 @@ export class DemandesService {
       where: { id },
       data: {
         niveauTraitement: 2,
-        statut: 'Transmis au Back Office 2',
+        statut: 'En cours',
         dateEscalade,
         commentaireEscalade: data.motif || null,
         agentN2: data.agentN2 || demande.agentN2,
@@ -378,9 +381,9 @@ export class DemandesService {
         data: {
           demandeId: id,
           auteur: user?.name || demande.agentN1 || 'Système',
-          action: 'Escalade N2',
+          action: 'Escalade BO1',
           canal: 'CRM',
-          detail: `Escaladée vers ${data.agentN2 || '—'} (${data.service || '—'})${data.motif ? ` — Motif : ${data.motif}` : ''}`,
+          detail: `Transmis au Back Office N1 — ${data.agentN2 || '—'} (${data.service || '—'})${data.motif ? ` — Motif : ${data.motif}` : ''}`,
         },
       });
     } catch (e) { console.error('[escalader] timeline error', e); }
@@ -388,10 +391,10 @@ export class DemandesService {
     this.audit.log({
       auteur: user?.email || user?.name || 'Système',
       auteurId: user?.id,
-      action: 'ESCALADE_N2',
+      action: 'ESCALADE_BO1',
       entite: 'Demande',
       entiteId: id,
-      detail: `Escalade vers ${data.agentN2 || '—'} / ${data.service || '—'}`,
+      detail: `Escalade BO1 vers ${data.agentN2 || '—'} / ${data.service || '—'}`,
     });
 
     // Notification email à l'agent N2
