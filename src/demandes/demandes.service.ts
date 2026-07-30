@@ -88,6 +88,10 @@ export class DemandesService {
   private static readonly VALID_CANAUX = ['EMAIL','TELEPHONE','WHATSAPP','SITE_WEB','GUICHET','PHYSIQUE','LINKEDIN','FACEBOOK','AUTRE'];
 
   private sanitize(data: any): any {
+    // typeDemandeId doit être un identifiant Prisma (cuid/uuid) — jamais un libellé texte
+    if (data.typeDemandeId && !/^[a-z0-9_-]{20,}$|^[0-9a-f-]{36}$/i.test(data.typeDemandeId)) {
+      data = { ...data, typeDemandeId: null };
+    }
     const excluded = ['profilClient', 'niveauTraitement', 'dateEscalade', 'commentaireEscalade', 'skipEmail', 'suppressionDemandee', 'suppressionDemandeePar'];
     const nonNullable = ['typeClient', 'nomPrenom', 'statut'];
     const result: any = {};
