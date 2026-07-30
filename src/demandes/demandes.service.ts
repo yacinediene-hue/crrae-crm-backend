@@ -62,12 +62,11 @@ export class DemandesService {
     return this.prisma.demande.findMany({
       where,
       orderBy: { createdAt: 'desc' },
-      include: { typeDemande: true },
     });
   }
 
   async findOne(id: string) {
-    const item = await this.prisma.demande.findUnique({ where: { id }, include: { typeDemande: true } });
+    const item = await this.prisma.demande.findUnique({ where: { id } });
 
     if (!item) {
       throw new NotFoundException(`Demande ${id} introuvable`);
