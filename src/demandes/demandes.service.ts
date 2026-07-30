@@ -2,6 +2,7 @@ import { Injectable, NotFoundException, InternalServerErrorException, BadRequest
 import { PrismaService } from '../prisma/prisma.service';
 import { EmailService } from '../email/email.service';
 import { AuditService } from '../audit/audit.service';
+import { computeDateLimite } from '../type-demandes/sla.utils';
 
 // Agents Back Office (N2) — peuvent aussi traiter en N1
 export const AGENTS_N2 = ['KACOU Michèle', 'Fatty KOUAME', 'COULIBALY Ismail', 'Yacine DIENE'];
@@ -61,11 +62,12 @@ export class DemandesService {
     return this.prisma.demande.findMany({
       where,
       orderBy: { createdAt: 'desc' },
+      include: { typeDemande: true },
     });
   }
 
   async findOne(id: string) {
-    const item = await this.prisma.demande.findUnique({ where: { id } });
+    const item = await this.prisma.demande.findUnique({ where: { id }, include: { typeDemande: true } });
 
     if (!item) {
       throw new NotFoundException(`Demande ${id} introuvable`);
@@ -136,6 +138,16 @@ export class DemandesService {
     const metrics = this.computeDelaiAndRespect(computedData);
     const priorite = this.computePriorite({ ...computedData, ...metrics });
 
+    let dateLimite: Date | null = null;
+    if (data.typeDemandeId && dateReception) {
+      try {
+        const td = await this.prisma.typeDemande.findUnique({ where: { id: data.typeDemandeId } });
+        if (td?.delaiMaxJours != null) {
+          dateLimite = computeDateLimite(dateReception, td.delaiMaxJours);
+        }
+      } catch (e) { console.error('[create] dateLimite calc error', e); }
+    }
+
     let demande: any;
     try {
       demande = await this.prisma.demande.create({
@@ -148,6 +160,7 @@ export class DemandesService {
           delaiTraitement: metrics.delaiTraitement,
           respectDelai: metrics.respectDelai,
           priorite,
+          dateLimite,
         },
       });
     } catch (e: any) {
@@ -214,6 +227,18 @@ export class DemandesService {
       ...metrics,
     });
 
+    const resolvedTypeDemandeId = data.typeDemandeId !== undefined ? data.typeDemandeId : (existing as any).typeDemandeId;
+    const resolvedDateReception = mergedData.dateReception;
+    let dateLimite: Date | null | undefined = undefined; // undefined = no change
+    if (resolvedTypeDemandeId && resolvedDateReception) {
+      try {
+        const td = await this.prisma.typeDemande.findUnique({ where: { id: resolvedTypeDemandeId } });
+        dateLimite = td?.delaiMaxJours != null ? computeDateLimite(resolvedDateReception, td.delaiMaxJours) : null;
+      } catch (e) { console.error('[update] dateLimite calc error', e); }
+    } else if (data.typeDemandeId === null) {
+      dateLimite = null;
+    }
+
     let updated: any;
     try {
       updated = await this.prisma.demande.update({
@@ -227,6 +252,7 @@ export class DemandesService {
           delaiTraitement: metrics.delaiTraitement,
           respectDelai: metrics.respectDelai,
           priorite,
+          ...(dateLimite !== undefined && { dateLimite }),
         },
       });
     } catch (e: any) {
@@ -423,14 +449,13 @@ export class DemandesService {
 
   async prendreEnCharge(id: string, user?: any) {
     const demande = await this.findOne(id);
-    if ((demande as any).statut !== 'Transmis au Back Office 2') {
-      throw new BadRequestException('Cette demande n\'est pas transmise au Back Office 2');
+    if ((demande as any).niveauTraitement < 2) {
+      throw new BadRequestException('Cette demande n\'est pas transmise au Back Office N1');
     }
 
     const updated = await this.prisma.demande.update({
       where: { id },
       data: {
-        statut: 'Transmis au Back Office 2',
         agentN2: user?.name || (demande as any).agentN2,
       },
     });

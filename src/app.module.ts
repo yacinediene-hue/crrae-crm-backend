@@ -19,6 +19,7 @@ import { AlertesModule } from './alertes/alertes.module';
 import { StoryModule } from './story/story.module';
 import { CryptoModule } from './crypto/crypto.module';
 import { BackupModule } from './backup/backup.module';
+import { TypeDemandesModule } from './type-demandes/type-demandes.module';
 import { ScheduleModule } from '@nestjs/schedule';
 
 @Module({
@@ -44,6 +45,7 @@ import { ScheduleModule } from '@nestjs/schedule';
     StoryModule,
     CryptoModule,
     BackupModule,
+    TypeDemandesModule,
   ],
 })
 export class AppModule {}

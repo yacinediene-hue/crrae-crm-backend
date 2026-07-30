@@ -202,6 +202,32 @@ model User {
   createdAt          DateTime @default(now())
 }
 
+model TypeDemande {
+  id            String   @id @default(cuid())
+  slug          String   @unique
+  libelle       String
+  delaiMaxJours Int?
+  actif         Boolean  @default(true)
+  notes         String?
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  demandes   Demande[]
+  historique HistoriqueTypeDemande[]
+}
+
+model HistoriqueTypeDemande {
+  id             String      @id @default(cuid())
+  typeDemandeId  String
+  typeDemande    TypeDemande @relation(fields: [typeDemandeId], references: [id], onDelete: Cascade)
+  auteur         String
+  auteurId       String?
+  champ          String
+  ancienneValeur String?
+  nouvelleValeur String?
+  createdAt      DateTime    @default(now())
+}
+
 model Demande {
   id                 String        @id @default(cuid())
   numDemande         String?       @unique
@@ -233,6 +259,9 @@ model Demande {
   niveauTraitement     Int           @default(1)
   dateEscalade         DateTime?
   commentaireEscalade  String?
+  typeDemandeId        String?
+  typeDemande          TypeDemande?  @relation(fields: [typeDemandeId], references: [id])
+  dateLimite           DateTime?
   createdAt            DateTime      @default(now())
   updatedAt            DateTime      @updatedAt
   commentaires       Commentaire[]
