@@ -62,6 +62,50 @@ export class PrismaService extends PrismaClient implements OnModuleInit {
     await run(`ALTER TABLE "Demande" ADD CONSTRAINT "Demande_typeDemandeId_fkey"
       FOREIGN KEY ("typeDemandeId") REFERENCES "TypeDemande"("id") ON DELETE SET NULL ON UPDATE CASCADE`);
 
+    // Seed des 31 types CMR (idempotent — ON CONFLICT slug DO NOTHING)
+    const { randomUUID } = await import('crypto');
+    const typesCmr = [
+      { slug: 'attestation-affiliation',        libelle: "Demande d''attestation d''affiliation",               delai: 2,    actif: true  },
+      { slug: 'bulletins-pension',               libelle: "Demande de bulletins de pension",                     delai: 2,    actif: true  },
+      { slug: 'correction-donnees',              libelle: "Demande de correction de données",                    delai: 2,    actif: true  },
+      { slug: 'simulation-pension',              libelle: "Demande de simulation de pension",                    delai: 2,    actif: true  },
+      { slug: 'releve-cotisation',               libelle: "Demande de relevé de cotisation",                     delai: 2,    actif: true  },
+      { slug: 'domiciliation',                   libelle: "Demande de domiciliation",                            delai: 2,    actif: true  },
+      { slug: 'attestation-pension',             libelle: "Demande d''attestation de pension",                   delai: 2,    actif: true  },
+      { slug: 'prise-en-charge',                 libelle: "Demande de prise en charge",                          delai: 2,    actif: true  },
+      { slug: 'entente-prealable',               libelle: "Demande d''entente préalable",                        delai: 2,    actif: true  },
+      { slug: 'evacuation-sanitaire',            libelle: "Évacuation sanitaire",                                delai: 1,    actif: true  },
+      { slug: 'attestation-assurance-maladie',   libelle: "Demande d''attestation d''assurance maladie",         delai: 2,    actif: true  },
+      { slug: 'liquidation-retraite',            libelle: "Demande de liquidation de pension de retraite",       delai: 60,   actif: true  },
+      { slug: 'poursuite-cotisation-ai-av',      libelle: "Poursuite de cotisation AI/AV",                      delai: 2,    actif: true  },
+      { slug: 'remboursement-frais-medicaux',    libelle: "Remboursement des frais médicaux",                    delai: 15,   actif: true  },
+      { slug: 'reclamation-pension',             libelle: "Demande de réclamation pension",                      delai: 2,    actif: true  },
+      { slug: 'info-pension',                    libelle: "Demande d''information simple sur pension",            delai: 2,    actif: true  },
+      { slug: 'pension-non-payee',               libelle: "Pension non payée",                                   delai: 2,    actif: true  },
+      { slug: 'reclamation-pension-reversion',   libelle: "Demande de réclamation pension de réversion",         delai: 2,    actif: true  },
+      { slug: 'info-pension-reversion',          libelle: "Demande d''information simple sur pension de réversion", delai: 2, actif: true  },
+      { slug: 'adhesion-rvc',                    libelle: "Demande d''adhésion au RVC",                          delai: 2,    actif: true  },
+      { slug: 'retrait-rvc',                     libelle: "Demande de retrait RVC",                              delai: null, actif: false },
+      { slug: 'info-rvc',                        libelle: "Demande d''information sur le RVC",                   delai: 2,    actif: true  },
+      { slug: 'reclamation-rvc',                 libelle: "Réclamation sur RVC",                                 delai: 2,    actif: true  },
+      { slug: 'info-cotisations-affiliation',    libelle: "Informations simples sur les cotisations / Affiliation", delai: 2, actif: true  },
+      { slug: 'adhesion-assurance-maladie-faam', libelle: "Adhésion à l''Assurance Maladie - FAAM",              delai: 90,   actif: true  },
+      { slug: 'carte-assurance-faam',            libelle: "Demande de carte d''assurance FAAM",                  delai: null, actif: false },
+      { slug: 'assistance-technique-plateforme', libelle: "Assistance technique - Plateforme en ligne",          delai: 2,    actif: true  },
+      { slug: 'certificat-de-vie',               libelle: "Certificat de vie",                                   delai: 2,    actif: true  },
+      { slug: 'location-salle',                  libelle: "Location de salle",                                   delai: 2,    actif: true  },
+      { slug: 'autre-demande-reclamation',       libelle: "Autre demande ou réclamation",                        delai: 2,    actif: true  },
+      { slug: 'services-informations-generales', libelle: "Services et informations générales",                  delai: 1,    actif: true  },
+    ];
+    for (const t of typesCmr) {
+      const delaiSql = t.delai === null ? 'NULL' : String(t.delai);
+      await run(
+        `INSERT INTO "TypeDemande" ("id","slug","libelle","delaiMaxJours","actif","createdAt","updatedAt")
+         VALUES ('${randomUUID()}','${t.slug}','${t.libelle}',${delaiSql},${t.actif},NOW(),NOW())
+         ON CONFLICT ("slug") DO NOTHING`,
+      );
+    }
+
     this.logger.log('Schema fixes applied');
   }
 }
