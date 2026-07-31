@@ -76,7 +76,7 @@ export class PrismaService extends PrismaClient implements OnModuleInit {
       { slug: 'entente-prealable',               libelle: "Demande d''entente préalable",                        delai: 2,    actif: true  },
       { slug: 'evacuation-sanitaire',            libelle: "Évacuation sanitaire",                                delai: 1,    actif: true  },
       { slug: 'attestation-assurance-maladie',   libelle: "Demande d''attestation d''assurance maladie",         delai: 2,    actif: true  },
-      { slug: 'liquidation-retraite',            libelle: "Demande de liquidation de pension de retraite",       delai: 60,   actif: true  },
+      { slug: 'liquidation-retraite',            libelle: "Demande de liquidation de pension de retraite",       delai: 45,   actif: true  },
       { slug: 'poursuite-cotisation-ai-av',      libelle: "Poursuite de cotisation AI/AV",                      delai: 2,    actif: true  },
       { slug: 'remboursement-frais-medicaux',    libelle: "Remboursement des frais médicaux",                    delai: 15,   actif: true  },
       { slug: 'reclamation-pension',             libelle: "Demande de réclamation pension",                      delai: 2,    actif: true  },
@@ -89,7 +89,7 @@ export class PrismaService extends PrismaClient implements OnModuleInit {
       { slug: 'info-rvc',                        libelle: "Demande d''information sur le RVC",                   delai: 2,    actif: true  },
       { slug: 'reclamation-rvc',                 libelle: "Réclamation sur RVC",                                 delai: 2,    actif: true  },
       { slug: 'info-cotisations-affiliation',    libelle: "Informations simples sur les cotisations / Affiliation", delai: 2, actif: true  },
-      { slug: 'adhesion-assurance-maladie-faam', libelle: "Adhésion à l''Assurance Maladie - FAAM",              delai: 90,   actif: true  },
+      { slug: 'adhesion-assurance-maladie-faam', libelle: "Adhésion à l''Assurance Maladie - FAAM",              delai: 60,   actif: true  },
       { slug: 'carte-assurance-faam',            libelle: "Demande de carte d''assurance FAAM",                  delai: null, actif: false },
       { slug: 'assistance-technique-plateforme', libelle: "Assistance technique - Plateforme en ligne",          delai: 2,    actif: true  },
       { slug: 'certificat-de-vie',               libelle: "Certificat de vie",                                   delai: 2,    actif: true  },
@@ -137,6 +137,28 @@ export class PrismaService extends PrismaClient implements OnModuleInit {
       AND d."typeDemandeId"  IS NULL
       AND d."dateReception"  IS NOT NULL
       AND td."delaiMaxJours" IS NOT NULL
+    `);
+
+    // Corrections délais CMR — mise à jour des types existants et recalcul dateLimite
+    await run(`UPDATE "TypeDemande" SET "delaiMaxJours" = 45, "updatedAt" = NOW() WHERE "slug" = 'liquidation-retraite' AND "delaiMaxJours" != 45`);
+    await run(`UPDATE "TypeDemande" SET "delaiMaxJours" = 60, "updatedAt" = NOW() WHERE "slug" = 'adhesion-assurance-maladie-faam' AND "delaiMaxJours" != 60`);
+
+    // Recalcul dateLimite sur les demandes liées aux types modifiés
+    await run(`
+      UPDATE "Demande" d
+      SET "dateLimite" = d."dateReception" + '45 days'::INTERVAL
+      FROM "TypeDemande" td
+      WHERE td."slug" = 'liquidation-retraite'
+        AND d."typeDemandeId" = td."id"
+        AND d."dateReception" IS NOT NULL
+    `);
+    await run(`
+      UPDATE "Demande" d
+      SET "dateLimite" = d."dateReception" + '60 days'::INTERVAL
+      FROM "TypeDemande" td
+      WHERE td."slug" = 'adhesion-assurance-maladie-faam'
+        AND d."typeDemandeId" = td."id"
+        AND d."dateReception" IS NOT NULL
     `);
 
     this.logger.log('Schema fixes applied');
