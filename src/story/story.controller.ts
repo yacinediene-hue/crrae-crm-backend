@@ -14,4 +14,10 @@ export class StoryController {
   generate(@Body() body: any) {
     return this.service.generateReport(body);
   }
+
+  @Post('chat')
+  @Roles('admin', 'manager', 'agent')
+  chat(@Body() body: { question: string; contexteData: string }) {
+    return this.service.chat(body);
+  }
 }

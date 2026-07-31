@@ -2,7 +2,7 @@ import { Injectable, InternalServerErrorException, Logger } from '@nestjs/common
 import { PrismaService } from '../prisma/prisma.service';
 import Anthropic from '@anthropic-ai/sdk';
 
-const CLOS = ['Traité', 'Clôturé'];
+const CLOS = ['Traité', 'Clôturé', 'Clôturée'];
 const CANAL_LABELS: Record<string, string> = {
   EMAIL: 'Email', TELEPHONE: 'Téléphone', WHATSAPP: 'WhatsApp',
   SITE_WEB: 'Site Web', GUICHET: 'Guichet', PHYSIQUE: 'Physique',
@@ -18,31 +18,61 @@ export class StoryService {
     this.anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY || '' });
   }
 
+  private getAnthropicOrThrow() {
+    if (!process.env.ANTHROPIC_API_KEY) {
+      throw new InternalServerErrorException('ANTHROPIC_API_KEY non configurée');
+    }
+    return this.anthropic;
+  }
+
+  private async callAnthropic(system: string, userContent: string, maxTokens = 2500) {
+    const client = this.getAnthropicOrThrow();
+    try {
+      const message = await client.messages.create({
+        model: 'claude-haiku-4-5-20251001',
+        max_tokens: maxTokens,
+        system,
+        messages: [{ role: 'user', content: userContent }],
+      });
+      return message;
+    } catch (e: any) {
+      this.logger.error('[StoryService] Erreur Anthropic:', e?.message);
+      const status = e?.status;
+      if (status === 401) throw new InternalServerErrorException('Clé API Anthropic invalide (401).');
+      if (status === 429) throw new InternalServerErrorException('Limite Anthropic atteinte. Réessayez (429).');
+      if (status === 529 || e?.message?.includes('overloaded')) throw new InternalServerErrorException('API Anthropic surchargée.');
+      throw new InternalServerErrorException(`Erreur Anthropic : ${e?.message || 'inconnue'}`);
+    }
+  }
+
   async generateReport(body: {
     periode: string;
     debut?: string;
     fin?: string;
     type?: string;
+    service?: string;
+    agent?: string;
   }) {
-    if (!process.env.ANTHROPIC_API_KEY) {
-      throw new InternalServerErrorException('ANTHROPIC_API_KEY non configurée');
-    }
-
     const all = await this.prisma.demande.findMany({ orderBy: { createdAt: 'desc' } });
-
     const now = new Date();
+
     const filtered = all.filter(d => {
       const ref = (d as any).dateReception || d.createdAt;
-      if (!ref) return true;
-      const date = new Date(ref);
-      if (body.periode === 'semaine') return (now.getTime() - date.getTime()) / 86400000 <= 7;
-      if (body.periode === 'mois') return date.getMonth() === now.getMonth() && date.getFullYear() === now.getFullYear();
-      if (body.periode === 'trimestre') { const t = new Date(); t.setMonth(now.getMonth() - 3); return date >= t; }
-      if (body.periode === 'annee') return date.getFullYear() === now.getFullYear();
-      if (body.periode === 'custom') {
-        if (body.debut && date < new Date(body.debut)) return false;
-        if (body.fin && date > new Date(body.fin + 'T23:59:59')) return false;
-        return true;
+      if (ref) {
+        const date = new Date(ref);
+        if (body.periode === 'semaine' && (now.getTime() - date.getTime()) / 86400000 > 7) return false;
+        if (body.periode === 'mois' && (date.getMonth() !== now.getMonth() || date.getFullYear() !== now.getFullYear())) return false;
+        if (body.periode === 'trimestre') { const t = new Date(); t.setMonth(now.getMonth() - 3); if (date < t) return false; }
+        if (body.periode === 'annee' && date.getFullYear() !== now.getFullYear()) return false;
+        if (body.periode === 'custom') {
+          if (body.debut && date < new Date(body.debut)) return false;
+          if (body.fin && date > new Date(body.fin + 'T23:59:59')) return false;
+        }
+      }
+      if (body.service && (d as any).service !== body.service) return false;
+      if (body.agent) {
+        const ag = body.agent.toLowerCase();
+        if ((d as any).agentN1?.toLowerCase() !== ag && (d as any).agentN2?.toLowerCase() !== ag) return false;
       }
       return true;
     });
@@ -50,12 +80,17 @@ export class StoryService {
     const total      = filtered.length;
     const traites    = filtered.filter(d => CLOS.includes(d.statut)).length;
     const enCours    = filtered.filter(d => d.statut === 'En cours').length;
-    const enAttente  = filtered.filter(d => d.statut === 'En attente').length;
+    const enAttente  = filtered.filter(d => d.statut === 'En attente client').length;
     const escalades  = filtered.filter(d => (d as any).niveauTraitement === 2).length;
-    const slaOui     = filtered.filter(d => d.respectDelai === 'OUI').length;
-    const horsSla    = filtered.filter(d => !CLOS.includes(d.statut) && d.respectDelai === 'NON').length;
+    const horsSla    = filtered.filter(d => {
+      if (CLOS.includes(d.statut)) return false;
+      const dl = (d as any).dateLimite;
+      if (dl) return new Date(dl) < now;
+      return d.respectDelai === 'NON';
+    }).length;
+    const slaOk      = total - horsSla;
     const tauxTraite = total > 0 ? Math.round(traites / total * 100) : 0;
-    const tauxSla    = total > 0 ? Math.round(slaOui / total * 100) : 0;
+    const tauxSla    = total > 0 ? Math.round(slaOk / total * 100) : 0;
 
     const notes = filtered.filter(d => (d as any).noteSatisfaction).map(d => (d as any).noteSatisfaction as number);
     const moyNote = notes.length > 0 ? (notes.reduce((a, b) => a + b, 0) / notes.length).toFixed(1) : null;
@@ -73,7 +108,12 @@ export class StoryService {
         const s = (d as any).service || 'Non défini';
         if (!acc[s]) acc[s] = { total: 0, slaOk: 0, traites: 0 };
         acc[s].total++;
-        if (d.respectDelai === 'OUI') acc[s].slaOk++;
+        if (!CLOS.includes(d.statut)) {
+          const dl = (d as any).dateLimite;
+          if (!(dl ? new Date(dl) < now : d.respectDelai === 'NON')) acc[s].slaOk++;
+        } else {
+          acc[s].slaOk++;
+        }
         if (CLOS.includes(d.statut)) acc[s].traites++;
         return acc;
       }, {})
@@ -112,6 +152,42 @@ export class StoryService {
       }, {})
     ).map(([canal, nb]) => ({ canal, nb })).sort((a, b) => b.nb - a.nb);
 
+    // Évolution mensuelle
+    const byMois = Object.entries(
+      all.filter(d => {
+        const ref = (d as any).dateReception || d.createdAt;
+        if (!ref) return false;
+        const date = new Date(ref);
+        return date.getFullYear() >= now.getFullYear() - 1;
+      }).filter(d => {
+        if (body.service && (d as any).service !== body.service) return false;
+        if (body.agent) {
+          const ag = body.agent.toLowerCase();
+          if ((d as any).agentN1?.toLowerCase() !== ag && (d as any).agentN2?.toLowerCase() !== ag) return false;
+        }
+        return true;
+      }).reduce((acc: Record<string, { total: number; traites: number; horsSla: number }>, d) => {
+        const ref = (d as any).dateReception || d.createdAt;
+        const date = new Date(ref);
+        const key = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`;
+        if (!acc[key]) acc[key] = { total: 0, traites: 0, horsSla: 0 };
+        acc[key].total++;
+        if (CLOS.includes(d.statut)) acc[key].traites++;
+        if (!CLOS.includes(d.statut)) {
+          const dl = (d as any).dateLimite;
+          if (dl ? new Date(dl) < now : d.respectDelai === 'NON') acc[key].horsSla++;
+        }
+        return acc;
+      }, {})
+    ).map(([mois, v]) => ({
+      mois,
+      label: new Date(mois + '-01').toLocaleDateString('fr-FR', { month: 'short', year: '2-digit' }),
+      total: v.total,
+      traites: v.traites,
+      horsSla: v.horsSla,
+      tauxSla: v.total > 0 ? Math.round((v.total - v.horsSla) / v.total * 100) : 100,
+    })).sort((a, b) => a.mois.localeCompare(b.mois)).slice(-12);
+
     const periodeLabels: Record<string, string> = {
       semaine: 'cette semaine', mois: 'ce mois en cours',
       trimestre: 'ce trimestre', annee: `l'année ${now.getFullYear()}`,
@@ -120,15 +196,17 @@ export class StoryService {
       ? `du ${new Date(body.debut).toLocaleDateString('fr-FR')} au ${new Date(body.fin).toLocaleDateString('fr-FR')}`
       : periodeLabels[body.periode] || body.periode;
 
+    const scopeLabel = [body.service && `service ${body.service}`, body.agent && `agent ${body.agent}`].filter(Boolean).join(', ');
+
     const dataSummary = `
-DONNÉES SERVICE CLIENT CRRAE-UMOA — ${periodeLabel.toUpperCase()}
+DONNÉES SERVICE CLIENT CRRAE-UMOA — ${periodeLabel.toUpperCase()}${scopeLabel ? ` (${scopeLabel})` : ''}
 Date : ${now.toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })}
 
 ─── VOLUME & STATUTS ───
 • Total demandes reçues : ${total}
 • Traitées / Clôturées : ${traites} (${tauxTraite}%)
 • En cours de traitement : ${enCours}
-• En attente : ${enAttente}
+• En attente client : ${enAttente}
 • Escaladées au niveau N2 : ${escalades} (${total > 0 ? Math.round(escalades / total * 100) : 0}%)
 
 ─── QUALITÉ DE SERVICE (SLA) ───
@@ -142,7 +220,6 @@ Date : ${now.toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', mont
 • Clients satisfaits (≥4/5) : ${promoteurs} (${notes.length > 0 ? Math.round(promoteurs / notes.length * 100) : 0}%)
 • Clients insatisfaits (≤2/5) : ${detracteurs}
 • Score NPS : ${nps !== null ? nps : 'Non calculable'}
-• Enquêtes envoyées : ${filtered.filter(d => (d as any).enqueteEnvoyee).length}
 
 ─── PERFORMANCE PAR SERVICE ───
 ${byService.map(s => `• ${s.service} : ${s.total} demandes — SLA ${s.tauxSla}% — Taux traitement ${s.tauxTraite}%`).join('\n') || '• Aucune donnée'}
@@ -162,86 +239,53 @@ ${byCanal.map(c => `• ${c.canal} : ${c.nb} (${total > 0 ? Math.round(c.nb / to
       complet: 'Génère un rapport complet et structuré couvrant toutes les dimensions : volume, qualité, satisfaction, performance par service et par agent, points d\'attention et recommandations.',
       tendances: 'Génère une analyse orientée tendances et perspectives. Identifie les signaux positifs, les dérives à surveiller et propose une feuille de route opérationnelle.',
     };
-
     const typeInstruction = typeMap[body.type || 'complet'] || typeMap.complet;
 
-    let message: Awaited<ReturnType<typeof this.anthropic.messages.create>>;
-    try {
-      message = await this.anthropic.messages.create({
-        model: 'claude-haiku-4-5-20251001',
-        max_tokens: 2500,
-        system: `Tu es un expert senior en relation client et en analyse de données pour des institutions financières d'Afrique de l'Ouest. Tu rédiges des rapports pour le Comité de Direction de la CRRAE-UMOA (Caisse de Retraite et de Renouvellement des Agents des États de l'UMOA), une institution de retraite servant les fonctionnaires des 8 pays de l'UMOA.
-
-RÈGLES ABSOLUES :
-- Rédige exclusivement en français professionnel et impeccable
-- Base-toi uniquement sur les données fournies, sans inventer
-- Utilise des titres markdown ## et ### pour structurer
-- Inclus des chiffres précis dans chaque section
-- Adopte un ton factuel, professionnel et constructif
-- Mets en valeur les succès autant que les axes d'amélioration
-- Les recommandations doivent être concrètes et actionnables
-
-${typeInstruction}`,
-        messages: [{
-          role: 'user',
-          content: `Voici les données du service client CRRAE-UMOA pour ${periodeLabel} :\n\n${dataSummary}\n\nGénère le rapport pour le Comité de Direction.`,
-        }],
-      });
-    } catch (e: any) {
-      this.logger.error('[StoryService] Erreur Anthropic API:', e?.message, e?.status, e?.error);
-      const status = e?.status;
-      if (status === 401) throw new InternalServerErrorException('Clé API Anthropic invalide ou expirée (401). Vérifiez ANTHROPIC_API_KEY sur Railway.');
-      if (status === 429) throw new InternalServerErrorException('Limite de débit Anthropic atteinte. Réessayez dans quelques instants (429).');
-      if (status === 529 || e?.message?.includes('overloaded')) throw new InternalServerErrorException('L\'API Anthropic est momentanément surchargée. Réessayez dans quelques secondes.');
-      throw new InternalServerErrorException(`Erreur API Anthropic : ${e?.message || 'erreur inconnue'}`);
-    }
+    const message = await this.callAnthropic(
+      `Tu es un expert senior en relation client pour des institutions financières d'Afrique de l'Ouest. Tu rédiges des rapports pour le Comité de Direction de la CRRAE-UMOA. Rédige exclusivement en français professionnel. Base-toi uniquement sur les données fournies. Utilise des titres markdown ## et ###. Inclus des chiffres précis. ${typeInstruction}`,
+      `Voici les données du service client CRRAE-UMOA pour ${periodeLabel} :\n\n${dataSummary}\n\nGénère le rapport.`,
+      2500,
+    );
 
     const rapport = message.content[0].type === 'text' ? message.content[0].text : '';
 
-    // Statuts distribution for chart
     const byStatut = [
-      { name: 'Traité / Clôturé', value: traites, color: '#276749' },
-      { name: 'En cours',         value: enCours,   color: '#2b6cb0' },
-      { name: 'En attente',       value: enAttente,  color: '#b7791f' },
-      { name: 'Escaladé N2',      value: escalades,  color: '#6b46c1' },
+      { name: 'Traité / Clôturé', value: traites,   color: '#276749' },
+      { name: 'En cours',          value: enCours,   color: '#2b6cb0' },
+      { name: 'En attente',        value: enAttente, color: '#b7791f' },
+      { name: 'Escaladé N2',       value: escalades, color: '#6b46c1' },
     ].filter(s => s.value > 0);
 
-    // Satisfaction distribution
     const passifs = notes.filter(n => n === 3).length;
     const satisfaction = notes.length > 0 ? [
-      { name: 'Satisfaits (≥4/5)',    value: promoteurs,  color: '#276749' },
-      { name: 'Neutres (3/5)',         value: passifs,     color: '#b7791f' },
-      { name: 'Insatisfaits (≤2/5)',  value: detracteurs, color: '#c53030' },
+      { name: 'Satisfaits (≥4/5)',   value: promoteurs,  color: '#276749' },
+      { name: 'Neutres (3/5)',        value: passifs,     color: '#b7791f' },
+      { name: 'Insatisfaits (≤2/5)', value: detracteurs, color: '#c53030' },
     ].filter(s => s.value > 0) : [];
 
     return {
       rapport,
-      analytics: {
-        byStatut,
-        byService,
-        byAgent,
-        byType,
-        byCanal,
-        satisfaction,
-      },
+      analytics: { byStatut, byService, byAgent, byType, byCanal, byMois, satisfaction },
       metadata: {
         periode: periodeLabel,
+        scopeLabel,
         genereLe: now.toISOString(),
         totalDemandes: total,
-        traites,
-        enCours,
-        enAttente,
-        escalades,
-        horsSla,
-        tauxTraite,
-        tauxSla,
-        delaiMoyen,
-        moyNote,
-        nps,
+        traites, enCours, enAttente, escalades, horsSla,
+        tauxTraite, tauxSla, delaiMoyen, moyNote, nps,
         notesCount: notes.length,
         enquetesEnvoyees: filtered.filter(d => (d as any).enqueteEnvoyee).length,
         tokensUtilises: message.usage.input_tokens + message.usage.output_tokens,
       },
     };
+  }
+
+  async chat(body: { question: string; contexteData: string }) {
+    const message = await this.callAnthropic(
+      `Tu es l'assistant IA du CRM CRRAE-UMOA. Tu réponds à des questions sur les données du service client. Sois concis (3-5 phrases max), factuel, en français professionnel. Si la question dépasse les données disponibles, dis-le clairement.`,
+      `Contexte des données :\n${body.contexteData}\n\nQuestion : ${body.question}`,
+      600,
+    );
+    return { reponse: message.content[0].type === 'text' ? message.content[0].text : '' };
   }
 }
