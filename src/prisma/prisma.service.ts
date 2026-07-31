@@ -106,6 +106,39 @@ export class PrismaService extends PrismaClient implements OnModuleInit {
       );
     }
 
+    // Migration SLA rétroactive — applique typeDemandeId + dateLimite aux anciennes demandes
+    // Skips: 'Pensions (gestion et paiement)' et 'Gestion du RVC' (types décomposés, mapping ambigu)
+    await run(`
+      UPDATE "Demande" d
+      SET
+        "typeDemandeId" = td."id",
+        "dateLimite"    = d."dateReception" + (td."delaiMaxJours"::text || ' days')::INTERVAL
+      FROM "TypeDemande" td
+      WHERE td."slug" = CASE d."objetDemande"
+          WHEN 'Demande de domiciliation'                              THEN 'domiciliation'
+          WHEN 'Adhésion à l''Assurance Maladie - FAAM'               THEN 'adhesion-assurance-maladie-faam'
+          WHEN 'Demande de bulletins de pension'                       THEN 'bulletins-pension'
+          WHEN 'Remboursement des frais médicaux'                      THEN 'remboursement-frais-medicaux'
+          WHEN 'Demande d''attestation de pension'                     THEN 'attestation-pension'
+          WHEN 'Certificat de vie'                                     THEN 'certificat-de-vie'
+          WHEN 'Demande d''information sur les pensions de réversion'  THEN 'info-pension-reversion'
+          WHEN 'Demande de liquidation de pension de retraite'         THEN 'liquidation-retraite'
+          WHEN 'Adhésion au RVC'                                       THEN 'adhesion-rvc'
+          WHEN 'Demande d''attestation d''assurance maladie'           THEN 'attestation-assurance-maladie'
+          WHEN 'Informations sur les cotisations'                      THEN 'info-cotisations-affiliation'
+          WHEN 'Assistance technique - Plateforme en ligne'            THEN 'assistance-technique-plateforme'
+          WHEN 'Services et informations générales'                    THEN 'services-informations-generales'
+          WHEN 'Prise en charge'                                       THEN 'prise-en-charge'
+          WHEN 'Entente préalable'                                     THEN 'entente-prealable'
+          WHEN 'Autre demande ou réclamation'                          THEN 'autre-demande-reclamation'
+          ELSE NULL
+        END
+      AND d."dateLimite"     IS NULL
+      AND d."typeDemandeId"  IS NULL
+      AND d."dateReception"  IS NOT NULL
+      AND td."delaiMaxJours" IS NOT NULL
+    `);
+
     this.logger.log('Schema fixes applied');
   }
 }
