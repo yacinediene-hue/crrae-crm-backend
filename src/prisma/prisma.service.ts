@@ -139,6 +139,46 @@ export class PrismaService extends PrismaClient implements OnModuleInit {
       AND td."delaiMaxJours" IS NOT NULL
     `);
 
+    // Migration service — attribuer la division selon objetDemande (seulement si service vide)
+    await run(`
+      UPDATE "Demande"
+      SET "service" = CASE "objetDemande"
+          WHEN 'Remboursement des frais médicaux'                       THEN 'DPM'
+          WHEN 'Certificat de vie'                                      THEN 'DPM'
+          WHEN 'Adhésion à l''Assurance Maladie - FAAM'                THEN 'DPM'
+          WHEN 'Demande d''attestation d''assurance maladie'            THEN 'DPM'
+          WHEN 'Prise en charge'                                        THEN 'DPM'
+          WHEN 'Entente préalable'                                      THEN 'DPM'
+          WHEN 'Demande de liquidation de pension de retraite'          THEN 'DPR'
+          WHEN 'Demande de domiciliation'                               THEN 'DPR'
+          WHEN 'Demande d''information sur les pensions de réversion'   THEN 'DPR'
+          WHEN 'Assistance technique - Plateforme en ligne'             THEN 'DDSI'
+          WHEN 'Adhésion au RVC'                                        THEN 'DCR'
+          WHEN 'Demande de bulletins de pension'                        THEN 'DRUC'
+          WHEN 'Demande d''attestation de pension'                      THEN 'DRUC'
+          WHEN 'Informations sur les cotisations'                       THEN 'DRUC'
+          WHEN 'Services et informations générales'                     THEN 'DRUC'
+        END
+      WHERE ("service" IS NULL OR "service" = '')
+        AND "objetDemande" IN (
+          'Remboursement des frais médicaux',
+          'Certificat de vie',
+          'Adhésion à l''Assurance Maladie - FAAM',
+          'Demande d''attestation d''assurance maladie',
+          'Prise en charge',
+          'Entente préalable',
+          'Demande de liquidation de pension de retraite',
+          'Demande de domiciliation',
+          'Demande d''information sur les pensions de réversion',
+          'Assistance technique - Plateforme en ligne',
+          'Adhésion au RVC',
+          'Demande de bulletins de pension',
+          'Demande d''attestation de pension',
+          'Informations sur les cotisations',
+          'Services et informations générales'
+        )
+    `);
+
     // Corrections délais CMR — mise à jour des types existants et recalcul dateLimite
     await run(`UPDATE "TypeDemande" SET "delaiMaxJours" = 45, "updatedAt" = NOW() WHERE "slug" = 'liquidation-retraite' AND "delaiMaxJours" != 45`);
     await run(`UPDATE "TypeDemande" SET "delaiMaxJours" = 60, "updatedAt" = NOW() WHERE "slug" = 'adhesion-assurance-maladie-faam' AND "delaiMaxJours" != 60`);
