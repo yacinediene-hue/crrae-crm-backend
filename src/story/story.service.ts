@@ -235,14 +235,14 @@ ${byCanal.map(c => `• ${c.canal} : ${c.nb} (${total > 0 ? Math.round(c.nb / to
 `.trim();
 
     const typeMap: Record<string, string> = {
-      executif: 'Génère un résumé exécutif synthétique (1 à 2 pages maximum) avec uniquement les points essentiels pour le Comité de Direction. Va à l\'essentiel : 3 chiffres clés, 2 points d\'attention, 2 recommandations prioritaires.',
-      complet: 'Génère un rapport complet et structuré couvrant toutes les dimensions : volume, qualité, satisfaction, performance par service et par agent, points d\'attention et recommandations.',
-      tendances: 'Génère une analyse orientée tendances et perspectives. Identifie les signaux positifs, les dérives à surveiller et propose une feuille de route opérationnelle.',
+      executif: 'Génère un résumé exécutif synthétique destiné à l\'ouverture d\'un Comité de Direction. Structure-le en 3 à 4 sections courtes (## Situation générale, ## Points d\'attention, ## Recommandations). Chaque section est rédigée en 2 à 3 paragraphes de prose fluide. Inclus les chiffres clés dans le corps du texte.',
+      complet: 'Génère un rapport complet structuré en sections (## Synthèse générale, ## Volume et traitement, ## Qualité de service, ## Satisfaction client, ## Performance par service, ## Recommandations). Chaque section est rédigée en paragraphes de prose continue, sans liste à puces. Intègre les chiffres précis dans le fil du texte.',
+      tendances: 'Génère une analyse orientée tendances et perspectives, structurée en sections (## Faits marquants, ## Signaux positifs, ## Points de vigilance, ## Feuille de route). Rédige chaque section en paragraphes de prose argumentée, sans liste à puces. Appuie-toi sur les données chiffrées pour étayer chaque point.',
     };
     const typeInstruction = typeMap[body.type || 'complet'] || typeMap.complet;
 
     const message = await this.callAnthropic(
-      `Tu es un expert senior en relation client pour des institutions financières d'Afrique de l'Ouest. Tu rédiges des rapports pour le Comité de Direction de la CRRAE-UMOA. Rédige exclusivement en français professionnel. Base-toi uniquement sur les données fournies. Utilise des titres markdown ## et ###. Inclus des chiffres précis. ${typeInstruction}`,
+      `Tu es un expert senior en relation client pour des institutions financières d'Afrique de l'Ouest. Tu rédiges des rapports pour le Comité de Direction de la CRRAE-UMOA (Caisse de Retraite des agents des États de l'UMOA). RÈGLES ABSOLUES : rédige exclusivement en français professionnel et impeccable ; base-toi uniquement sur les données fournies sans inventer ; utilise uniquement des titres de section ## et ### pour structurer, mais le CONTENU de chaque section doit être rédigé en paragraphes de texte continu — AUCUNE liste à puces, AUCUN tiret, AUCUN point de liste ; intègre tous les chiffres dans la prose. ${typeInstruction}`,
       `Voici les données du service client CRRAE-UMOA pour ${periodeLabel} :\n\n${dataSummary}\n\nGénère le rapport.`,
       2500,
     );
