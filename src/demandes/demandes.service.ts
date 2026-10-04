@@ -92,7 +92,7 @@ export class DemandesService {
     if (data.typeDemandeId && !/^[a-z0-9_-]{20,}$|^[0-9a-f-]{36}$/i.test(data.typeDemandeId)) {
       data = { ...data, typeDemandeId: null };
     }
-    const excluded = ['profilClient', 'niveauTraitement', 'dateEscalade', 'commentaireEscalade', 'skipEmail', 'suppressionDemandee', 'suppressionDemandeePar'];
+    const excluded = ['profilClient', 'niveauTraitement', 'commentaireEscalade', 'skipEmail', 'suppressionDemandee', 'suppressionDemandeePar'];
     const nonNullable = ['typeClient', 'nomPrenom', 'statut'];
     const result: any = {};
     for (const key of Object.keys(data)) {
@@ -251,6 +251,7 @@ export class DemandesService {
           statut: resolvedStatut,
           dateReception: mergedData.dateReception,
           dateTraitement: mergedData.dateTraitement,
+          dateEscalade: data.dateEscalade ? new Date(data.dateEscalade) : data.dateEscalade === null ? null : undefined,
           noteSatisfaction: mergedData.noteSatisfaction,
           delaiTraitement: metrics.delaiTraitement,
           respectDelai: metrics.respectDelai,
