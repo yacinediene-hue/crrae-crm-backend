@@ -104,7 +104,7 @@ export class DemandesService {
       }
       if (nonNullable.includes(key)) {
         if (key === 'nomPrenom') result[key] = data[key] || 'Non renseigné';
-        else if (key === 'typeClient') result[key] = data[key] || 'Actif';
+        else if (key === 'typeClient') result[key] = data[key] || 'Participant cadre';
         else if (key === 'statut') result[key] = data[key] || 'Nouveau';
         else result[key] = data[key] || undefined;
       } else {
